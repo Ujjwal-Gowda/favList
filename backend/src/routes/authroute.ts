@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "../db";
+import prisma from "../db";
 const router = express.Router();
 import dotenv from "dotenv";
 dotenv.config();
@@ -11,6 +11,9 @@ router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
+    if (!name) {
+      return res.status(400).json({ error: "name not provided" });
+    }
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
