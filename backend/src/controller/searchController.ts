@@ -63,7 +63,7 @@ async function fetchTwitchToken(): Promise<string> {
   }
 }
 
-async function getToken(): Promise<string> {
+async function getTwitchToken(): Promise<string> {
   if (tokenCache.token && Date.now() < tokenCache.expiresAt) {
     return tokenCache.token;
   }
@@ -78,7 +78,7 @@ export const gameSearch = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Query parameter is required" });
     }
 
-    const token = await getToken();
+    const token = await getTwitchToken();
 
     const igdbResponse = await fetch("https://api.igdb.com/v4/games", {
       method: "POST",
@@ -119,6 +119,81 @@ export const gameSearch = async (req: Request, res: Response) => {
         process.env.NODE_ENV === "development"
           ? String(error)
           : "Unable to search games",
+    });
+  }
+};
+
+async function fetchSpotifyToken(): Promise<string> {
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `grant_type=client_credentials&client_id=${process.env.SPOTIFY_CLIENT}&client_secret=${process.env.SPOTIFY_SECRET}`,
+    });
+
+    if (!response.ok) {
+      throw new Error(`spotify auth failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    tokenCache.token = data.access_token;
+    tokenCache.expiresAt = Date.now() + data.expires_in * 1000;
+
+    return data.access_token;
+  } catch (error) {
+    console.error("spotify token error:", error);
+    throw new Error("Failed to authenticate with spotify");
+  }
+}
+
+async function getSpotifyToken(): Promise<string> {
+  if (tokenCache.token && Date.now() < tokenCache.expiresAt) {
+    return tokenCache.token;
+  }
+  return fetchSpotifyToken();
+}
+
+export const songSearch = async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || typeof query !== "string" || query.trim().length === 0) {
+      return res.status(400).json({ error: "Query parameter is required" });
+    }
+
+    const token = await getSpotifyToken();
+
+    const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+      query,
+    )}&type=track,album,artist&limit=10`;
+
+    const spotifyResponse = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!spotifyResponse.ok) {
+      const errorText = await spotifyResponse.text();
+      console.error("spotify error:", spotifyResponse.status, errorText);
+      return res
+        .status(500)
+        .json({ error: "failed to fetch music from spotify" });
+    }
+
+    const songs = await spotifyResponse.json();
+
+    return res.json({
+      success: true,
+      data: songs,
+      count: songs.length,
+    });
+  } catch (error) {
+    console.error("music search error:", error);
+
+    return res.status(500).json({
+      error: "Internal server error",
     });
   }
 };
