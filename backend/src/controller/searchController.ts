@@ -42,23 +42,32 @@ let tokenExpiry = 0;
 async function fetchTwitchToken(): Promise<string> {
   const url = "https://id.twitch.tv/oauth2/token";
 
-  const params = new URLSearchParams();
-  params.append("client_id", process.env.TWITCH_CLIENT_ID!);
-  params.append("client_secret", process.env.TWITCH_CLIENT_SECRET!);
-  params.append("grant_type", "client_credentials");
+  const body = `client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`;
 
-  const res = await fetch(url, { method: "POST", body: params });
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body,
+    });
 
-  if (!res.ok) {
-    console.error("TOKEN ERROR:", await res.text());
-    throw new Error("Failed Twitch Authentication");
+    if (!res.ok) {
+      console.error("TOKEN ERROR:", res.status, await res.text());
+      throw new Error(`Failed Twitch Authentication: ${res.status}`);
+    }
+
+    const data = await res.json();
+    cachedToken = data.access_token;
+    tokenExpiry = Date.now() + data.expires_in * 1000;
+
+    console.log(" Token fetched successfully");
+    return cachedToken;
+  } catch (error) {
+    console.error("Fetch token error details:", error);
+    throw error;
   }
-
-  const data = await res.json();
-  cachedToken = data.access_token;
-  tokenExpiry = Date.now() + data.expires_in * 1000;
-
-  return cachedToken;
 }
 
 async function getValidToken(): Promise<string> {

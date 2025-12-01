@@ -14,6 +14,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/search", searchRoutes);
 app.use("/favorites", favRoutes);
+
 app.listen(5000, () => {
   console.log("server running on http://localhost:5000");
 });
