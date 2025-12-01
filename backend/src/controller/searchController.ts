@@ -35,81 +35,90 @@ export const searchBook = async (req: Request, res: Response) => {
     });
   }
 };
-
-let cachedToken: string | null = null;
-let tokenExpiry = 0;
+let tokenCache = {
+  token: "",
+  expiresAt: 0,
+};
 
 async function fetchTwitchToken(): Promise<string> {
-  const url = "https://id.twitch.tv/oauth2/token";
-
-  const body = `client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`;
-
   try {
-    const res = await fetch(url, {
+    const response = await fetch(`https://id.twitch.tv/oauth2/token`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: body,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
     });
 
-    if (!res.ok) {
-      console.error("TOKEN ERROR:", res.status, await res.text());
-      throw new Error(`Failed Twitch Authentication: ${res.status}`);
+    if (!response.ok) {
+      throw new Error(`Twitch auth failed: ${response.statusText}`);
     }
 
-    const data = await res.json();
-    cachedToken = data.access_token;
-    tokenExpiry = Date.now() + data.expires_in * 1000;
+    const data = await response.json();
+    tokenCache.token = data.access_token;
+    tokenCache.expiresAt = Date.now() + data.expires_in * 1000;
 
-    console.log(" Token fetched successfully");
-    return cachedToken;
+    return data.access_token;
   } catch (error) {
-    console.error("Fetch token error details:", error);
-    throw error;
+    console.error("Twitch token error:", error);
+    throw new Error("Failed to authenticate with Twitch");
   }
 }
 
-async function getValidToken(): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiry) {
-    return cachedToken;
+async function getToken(): Promise<string> {
+  if (tokenCache.token && Date.now() < tokenCache.expiresAt) {
+    return tokenCache.token;
   }
-  return await fetchTwitchToken();
+  return fetchTwitchToken();
 }
 
-export const gameSearch = async (req: any, res: any) => {
-  const query = req.query.query;
-  console.log(query);
-  console.log("CLIENT:", process.env.TWITCH_CLIENT_ID);
-  console.log("SECRET:", process.env.TWITCH_CLIENT_SECRET);
+export const gameSearch = async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
 
-  if (!query) {
-    return res.status(400).json({ error: "Query parameter required" });
+    if (!query || typeof query !== "string" || query.trim().length === 0) {
+      return res.status(400).json({ error: "Query parameter is required" });
+    }
+
+    const token = await getToken();
+
+    const igdbResponse = await fetch("https://api.igdb.com/v4/games", {
+      method: "POST",
+      headers: {
+        "Client-ID": process.env.TWITCH_CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "text/plain",
+      },
+      body: `fields name,cover.url,first_release_date,platforms.name,rating,summary; search "${query}"; limit 10;`,
+      timeout: 10000,
+    });
+
+    if (!igdbResponse.ok) {
+      const errorText = await igdbResponse.text();
+      console.error("IGDB error:", igdbResponse.status, errorText);
+      return res.status(500).json({ error: "Failed to fetch games from IGDB" });
+    }
+
+    const games = await igdbResponse.json();
+
+    return res.json({
+      success: true,
+      data: games,
+      count: games.length,
+    });
+  } catch (error) {
+    console.error("Game search error:", error);
+
+    if (error instanceof Error) {
+      if (error.message.includes("Twitch")) {
+        return res.status(503).json({ error: error.message });
+      }
+    }
+
+    return res.status(500).json({
+      error: "Internal server error",
+      message:
+        process.env.NODE_ENV === "development"
+          ? String(error)
+          : "Unable to search games",
+    });
   }
-
-  const token = await getValidToken();
-
-  const response = await fetch("https://api.igdb.com/v4/games", {
-    method: "POST",
-    headers: {
-      "Client-ID": process.env.TWITCH_CLIENT_ID!,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-
-    body: `
-      fields name, cover.url, first_release_date, platforms.name, rating, summary;
-      search "${query}";
-      limit 10;
-    `,
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.log("IGDB ERROR:", error);
-    return res.status(500).json({ error: "Failed to fetch from IGDB" });
-  }
-
-  const data = await response.json();
-  return res.json(data);
 };
