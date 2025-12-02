@@ -30,7 +30,7 @@ router.post("/signup", async (req, res) => {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.json({ user, token });
+    res.json({ user });
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -54,10 +54,20 @@ router.post("/signin", async (req, res) => {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.json({ user, token });
+    res.json({ user });
   } catch (error) {
     console.error("Signin error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+router.post("/logout", async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "strict",
+      path: "/",
+    });
+    res.redirect("/");
+  } catch (error) {}
 });
 export default router;
