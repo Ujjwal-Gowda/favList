@@ -75,3 +75,22 @@ export const deleteFavorite = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const checkFavorite = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { title, type } = req.query;
+
+    const exists = await prisma.favorite.findFirst({
+      where: {
+        userId,
+        title: title as string,
+        type: type as FavoriteType,
+      },
+    });
+
+    res.json({ favorited: Boolean(exists), id: exists?.id });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to check favorite" });
+  }
+};

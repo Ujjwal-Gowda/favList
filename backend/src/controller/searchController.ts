@@ -36,8 +36,9 @@ export const searchBook = async (req: Request, res: Response) => {
       categories: book.volumeInfo?.categories || [],
     }));
     return res.json({
-      message: "Success",
-      cleaned,
+      success: true,
+      data: cleaned,
+      count: cleaned.length,
     });
   } catch (err) {
     return res.status(500).json({
@@ -46,7 +47,7 @@ export const searchBook = async (req: Request, res: Response) => {
     });
   }
 };
-let tokenCache = {
+let twitchtokenCache = {
   token: "",
   expiresAt: 0,
 };
@@ -64,8 +65,8 @@ async function fetchTwitchToken(): Promise<string> {
     }
 
     const data = await response.json();
-    tokenCache.token = data.access_token;
-    tokenCache.expiresAt = Date.now() + data.expires_in * 1000;
+    twitchtokenCache.token = data.access_token;
+    twitchtokenCache.expiresAt = Date.now() + data.expires_in * 1000;
 
     return data.access_token;
   } catch (error) {
@@ -75,8 +76,8 @@ async function fetchTwitchToken(): Promise<string> {
 }
 
 async function getTwitchToken(): Promise<string> {
-  if (tokenCache.token && Date.now() < tokenCache.expiresAt) {
-    return tokenCache.token;
+  if (twitchtokenCache.token && Date.now() < twitchtokenCache.expiresAt) {
+    return twitchtokenCache.token;
   }
   return fetchTwitchToken();
 }
@@ -140,7 +141,10 @@ export const gameSearch = async (req: Request, res: Response) => {
     });
   }
 };
-
+let spotifytokenCache = {
+  token: "",
+  expiresAt: 0,
+};
 async function fetchSpotifyToken(): Promise<string> {
   try {
     const response = await fetch("https://accounts.spotify.com/api/token", {
@@ -154,8 +158,8 @@ async function fetchSpotifyToken(): Promise<string> {
     }
 
     const data = await response.json();
-    tokenCache.token = data.access_token;
-    tokenCache.expiresAt = Date.now() + data.expires_in * 1000;
+    spotifytokenCache.token = data.access_token;
+    spotifytokenCache.expiresAt = Date.now() + data.expires_in * 1000;
 
     return data.access_token;
   } catch (error) {
@@ -165,8 +169,8 @@ async function fetchSpotifyToken(): Promise<string> {
 }
 
 async function getSpotifyToken(): Promise<string> {
-  if (tokenCache.token && Date.now() < tokenCache.expiresAt) {
-    return tokenCache.token;
+  if (spotifytokenCache.token && Date.now() < spotifytokenCache.expiresAt) {
+    return spotifytokenCache.token;
   }
   return fetchSpotifyToken();
 }
@@ -266,5 +270,87 @@ export const movieSearch = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "Internal server error",
     });
+  }
+};
+
+export const searchUnsplash = async (req: Request, res: Response) => {
+  try {
+    const query = (req.query.query as string) || "";
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: "Query parameter 'query' is required",
+      });
+    }
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${query}&per_page=10`,
+      {
+        headers: {
+          Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+        },
+      },
+    );
+
+    const data = await response.json();
+    console.log(data);
+
+    const cleaned = data.results.map((img: any) => ({
+      id: img.id,
+      description: img.description || img.alt_description,
+      url: img.urls?.regular,
+      thumb: img.urls?.thumb,
+      download: img.links?.download,
+      usplash: img.links?.html,
+      user: {
+        name: img.user?.name,
+        profile: img.user?.links?.html,
+      },
+    }));
+
+    return res.json({
+      success: true,
+      data: cleaned,
+      count: cleaned.length,
+    });
+  } catch (error) {
+    console.error("Unsplash error:", error);
+    return res.status(500).json({ error: "Failed to fetch Unsplash images" });
+  }
+};
+
+export const recommendedUnsplash = async (req: Request, res: Response) => {
+  try {
+    const response = await fetch(
+      `https://api.unsplash.com/photos?per_page=10&order_by=popular`,
+      {
+        headers: {
+          Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}`,
+        },
+      },
+    );
+
+    const data = await response.json();
+
+    const cleaned = data.map((img: any) => ({
+      id: img.id,
+      description: img.description || img.alt_description,
+      url: img.urls?.regular,
+      thumb: img.urls?.thumb,
+      download: img.links?.download,
+      usplash: img.links?.html,
+      user: {
+        name: img.user?.name,
+        profile: img.user?.links?.html,
+      },
+    }));
+    return res.json({
+      success: true,
+      data: cleaned,
+      count: cleaned.length,
+    });
+  } catch (error) {
+    console.error("Unsplash error:", error);
+    return res.status(500).json({ error: "Failed to fetch Unsplash images" });
   }
 };
