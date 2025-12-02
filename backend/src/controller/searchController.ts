@@ -1,6 +1,7 @@
 import z from "zod";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
+import { platform } from "os";
 dotenv.config();
 const bookschema = z.object({
   name: z.string().min(1, "Title is required"),
@@ -24,9 +25,19 @@ export const searchBook = async (req: Request, res: Response) => {
 
     const data = await response.json();
 
+    const cleaned = data.items.map((book: any) => ({
+      id: book.id,
+      title: book.volumeInfo?.title,
+      authors: book.volumeInfo?.authors || [],
+      publishedDate: book.volumeInfo?.publishedDate,
+      description: book.volumeInfo?.description,
+      pageCount: book.volumeInfo?.pageCount,
+      thumbnail: book.volumeInfo?.imageLinks?.thumbnail || null,
+      categories: book.volumeInfo?.categories || [],
+    }));
     return res.json({
       message: "Success",
-      data,
+      cleaned,
     });
   } catch (err) {
     return res.status(500).json({
@@ -98,11 +109,18 @@ export const gameSearch = async (req: Request, res: Response) => {
     }
 
     const games = await igdbResponse.json();
-
+    const cleaned = games.map((game: any) => ({
+      id: game.id,
+      name: game.name,
+      image: game.cover?.url,
+      platform: game.platforms.map((i) => i?.name),
+      rating: game.rating,
+      summary: game.summary,
+    }));
     return res.json({
       success: true,
-      data: games,
-      count: games.length,
+      data: cleaned,
+      count: cleaned.length,
     });
   } catch (error) {
     console.error("Game search error:", error);
@@ -184,14 +202,34 @@ export const songSearch = async (req: Request, res: Response) => {
 
     const songs = await spotifyResponse.json();
 
+    const cleaned = songs.tracks.items.map((track: any) => ({
+      id: track.id,
+      name: track.name,
+
+      artists: track.artists.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        url: a.external_urls?.spotify,
+      })),
+
+      album: {
+        id: track.album?.id,
+        name: track.album?.name,
+        releaseDate: track.album?.release_date,
+        image: track.album?.images?.[0]?.url || null,
+        url: track.album?.external_urls?.spotify,
+      },
+
+      previewUrl: track.preview_url || null,
+      spotifyUrl: track.external_urls?.spotify || null,
+    }));
     return res.json({
       success: true,
-      data: songs,
-      count: songs.length,
+      data: cleaned,
+      count: cleaned.length,
     });
   } catch (error) {
     console.error("music search error:", error);
-
     return res.status(500).json({
       error: "Internal server error",
     });
