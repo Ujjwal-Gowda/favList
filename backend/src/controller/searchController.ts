@@ -197,3 +197,36 @@ export const songSearch = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const movieSearch = async (req: Request, res: Response) => {
+  const movie = req.query.query as string;
+  console.log(movie);
+  try {
+    if (!movie) {
+      return res.status(400).json({ error: "movie name is required" });
+    }
+    const data = await fetch(
+      `https://imdb.iamidiotareyoutoo.com/search?q=${movie}`,
+      {
+        method: "GET",
+      },
+    );
+    if (!data.ok) {
+      const errorText = await data.text();
+      console.error("spotify error:", data.status, errorText);
+      return res.status(500).json({ error: "failed to fetch movie" });
+    }
+    const result = await data.json();
+    return res.json({
+      success: true,
+      data: result,
+      count: result.length,
+    });
+  } catch (error) {
+    console.error("movie search error:", error);
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
