@@ -17,7 +17,7 @@ export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full flex items-center gap-2 p-2 bg-gray-800 rounded-xl shadow-md"
+      className="w-50 flex items-center gap-2 p-2 bg-gray-800 rounded-xl shadow-md"
     >
       <input
         type="text"

@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
-import { Music, Film, Gamepad2, BookOpen, Palette, Plus } from "lucide-react";
-// import CategoryCard from "../components/CategoryCard";
+import {
+  Music,
+  Film,
+  Gamepad2,
+  BookOpen,
+  Palette,
+  Plus,
+  X,
+} from "lucide-react";
 import SearchBar from "../components/searchbar";
 import SearchResults from "../components/SearchResults";
-import FavoriteItem from "../components/FavoriteItem";
 import ManualAddForm from "../components/ManualAddForms";
 import VerticalCategoryCarousel from "../components/carousel";
+import FavoriteCarousel from "../components/FavoriteCarousel";
+
 const categories = [
   { type: "MUSIC", icon: Music, label: "Music", color: "bg-purple-400" },
   { type: "MOVIE", icon: Film, label: "Movies", color: "bg-rose-400" },
@@ -16,7 +24,7 @@ const categories = [
 ];
 
 export default function Favorites() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("ART");
   const [favorites, setFavorites] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
@@ -76,7 +84,6 @@ export default function Favorites() {
         const response = await fetch(endpoint, { credentials: "include" });
         const data = await response.json();
 
-        // Handle different response structures
         let results = [];
         if (Array.isArray(data.data)) {
           results = data.data;
@@ -117,6 +124,7 @@ export default function Favorites() {
           item.Year ||
           "",
         url: item.spotifyUrl || item.usplash || item.links?.html || "",
+        description: item.description || item.summary || "",
         ...item,
       };
 
@@ -180,103 +188,74 @@ export default function Favorites() {
     return favorites.filter((f) => f.type === selectedCategory);
   };
 
-  const getCategoryCount = (type: string) => {
-    return favorites.filter((f) => f.type === type).length;
-  };
-
   return (
-    <div className="min-h-screen min-w-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-      <div className="  px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
-          {/* Category Selection - Nintendo DS Style */}
-          <div
-            className={`transition-all duration-500 ${
-              selectedCategory ? "w-64 flex-shrink-0" : "flex-1"
-            }`}
-          >
-            <h1 className="text-3xl font-bold text-slate-800 mb-6">
-              Favorites
-            </h1>
+    <div className="h-screen flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-hidden">
+      <div className="flex-1 flex">
+        {/* Left Sidebar - Category Carousel */}
+        <div className="w-80 flex-shrink-0 p-6">
+          <h1 className="text-3xl font-bold text-slate-800 mb-6">Favorites</h1>
+          <VerticalCategoryCarousel
+            categories={categories}
+            onSelect={(type: string) => {
+              setSelectedCategory(type);
+              setIsSearching(false);
+              setSearchResults([]);
+            }}
+          />
+        </div>
 
-            <div className="flex gap-8">
-              <VerticalCategoryCarousel
-                categories={categories}
-                onSelect={(type) => {
-                  setSelectedCategory(type);
-                  setIsSearching(false);
-                  setSearchResults([]);
-                }}
-              />
-              {selectedCategory && (
-                <div className="flex-1 space-y-6">
-                  {/* right side: search, add manual, favorites list */}
-                  ...
-                </div>
-              )}
-            </div>
+        {/* Right Content Area */}
+        <div className="flex-1 flex flex-col p-6 space-y-4 overflow-hidden">
+          {/* Search Bar */}
+          <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-lg border border-purple-100">
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder={`Search for ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
+            />
           </div>
 
-          {/* Expanded Category View */}
-          {selectedCategory && (
-            <div className="flex-1 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-              {/* Search Bar */}
-              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100">
-                <SearchBar
-                  onSearch={handleSearch}
-                  placeholder={`Search for ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
-                />
+          {/* Manual Add Button */}
+          <ManualAddForm type={selectedCategory} onAdd={handleManualAdd} />
+
+          {/* Search Results or Favorites */}
+          <div className="flex-1 overflow-auto">
+            {isSearching ? (
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 h-full overflow-auto">
+                <h2 className="text-xl font-bold text-slate-800 mb-4">
+                  Search Results
+                </h2>
+                {loading ? (
+                  <div className="text-center py-12 text-slate-500">
+                    Searching...
+                  </div>
+                ) : (
+                  <SearchResults
+                    results={searchResults}
+                    type={selectedCategory}
+                    onAddFavorite={handleAddFavorite}
+                    favoriteIds={favoriteIds}
+                  />
+                )}
               </div>
-
-              {/* Manual Add Form */}
-              <ManualAddForm type={selectedCategory} onAdd={handleManualAdd} />
-
-              {/* Search Results */}
-              {isSearching && (
-                <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100">
-                  <h2 className="text-xl font-bold text-slate-800 mb-4">
-                    Search Results
-                  </h2>
-                  {loading ? (
-                    <div className="text-center py-12 text-slate-500">
-                      Searching...
-                    </div>
-                  ) : (
-                    <SearchResults
-                      results={searchResults}
-                      type={selectedCategory}
-                      onAddFavorite={handleAddFavorite}
-                      favoriteIds={favoriteIds}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Your Favorites in This Category */}
-              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100">
+            ) : (
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 h-full flex flex-col">
                 <h2 className="text-xl font-bold text-slate-800 mb-4">
                   Your{" "}
                   {categories.find((c) => c.type === selectedCategory)?.label}
                 </h2>
                 {getCategoryFavorites().length === 0 ? (
-                  <div className="text-center py-12 text-slate-500">
+                  <div className="flex-1 flex items-center justify-center text-slate-500">
                     No favorites yet. Search and add some!
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {getCategoryFavorites().map((favorite) => (
-                      <FavoriteItem
-                        key={favorite.id}
-                        id={favorite.id}
-                        title={favorite.title}
-                        metadata={favorite.metadata}
-                        onDelete={handleDeleteFavorite}
-                      />
-                    ))}
-                  </div>
+                  <FavoriteCarousel
+                    favorites={getCategoryFavorites()}
+                    onDelete={handleDeleteFavorite}
+                  />
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

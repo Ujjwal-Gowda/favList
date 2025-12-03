@@ -1,13 +1,27 @@
 import { useState, useEffect } from "react";
 
-export default function VerticalCategoryCarousel({ categories, onSelect }) {
+interface Category {
+  type: string;
+  icon: any;
+  label: string;
+  color: string;
+}
+
+interface CarouselProps {
+  categories: Category[];
+  onSelect: (type: string) => void;
+}
+
+export default function VerticalCategoryCarousel({
+  categories,
+  onSelect,
+}: CarouselProps) {
   const [index, setIndex] = useState(0);
 
   const moveUp = () => setIndex((i) => (i > 0 ? i - 1 : categories.length - 1));
   const moveDown = () =>
     setIndex((i) => (i < categories.length - 1 ? i + 1 : 0));
 
-  // Arrow key controls
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp") moveUp();
@@ -17,28 +31,26 @@ export default function VerticalCategoryCarousel({ categories, onSelect }) {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  // Notify parent on selection
   useEffect(() => {
     onSelect(categories[index].type);
+    // Only depend on index
   }, [index]);
-
   return (
-    <div className="relative h-[650px] w-64 flex items-center gap-4">
-      {/* LEFT POINTER ARROW */}
+    <div className="relative h-[500px] flex items-center gap-4">
       <div className="flex items-center">
         <div className="w-0 h-0 border-t-[20px] border-b-[20px] border-r-[25px] border-transparent border-r-gray-500 opacity-60"></div>
       </div>
 
-      {/* CAROUSEL */}
-      <div className="relative h-full overflow-hidden w-full flex justify-center">
+      <div className="relative h-full overflow-hidden w-48 flex justify-center">
         <div
-          className="flex flex-col items-center gap-8 transition-transform duration-500"
+          className="flex flex-col items-center gap-6 transition-transform duration-500"
           style={{
-            transform: `translateY(calc(50% - ${index * 180}px))`,
+            transform: `translateY(${200 - index * 140}px)`,
           }}
         >
           {categories.map((cat, i) => {
             const isCenter = i === index;
+            const Icon = cat.icon;
 
             return (
               <div
@@ -49,31 +61,30 @@ export default function VerticalCategoryCarousel({ categories, onSelect }) {
                   rounded-3xl transition-all duration-300
                   ${
                     isCenter
-                      ? "w-44 h-44 scale-110 shadow-2xl opacity-100 border-[4px] border-transparent bg-white relative"
-                      : "w-28 h-28 scale-90 opacity-40"
+                      ? "w-32 h-32 scale-110 shadow-2xl opacity-100 border-4 border-transparent bg-white"
+                      : "w-20 h-20 scale-90 opacity-40"
                   }
                 `}
                 style={
                   isCenter
                     ? {
                         background:
-                          "linear-gradient(135deg, rgba(255,170,220,0.8), rgba(120,200,255,0.8))",
+                          "linear-gradient(135deg, rgba(200,150,255,0.5), rgba(255,150,200,0.5))",
                         padding: "4px",
                       }
                     : {}
                 }
               >
-                {/* White inner area like DS */}
                 <div
                   className={`flex items-center justify-center w-full h-full rounded-2xl ${
                     isCenter ? "bg-white" : cat.color
                   }`}
                 >
-                  <cat.icon
+                  <Icon
                     className={`${
                       isCenter
-                        ? "w-14 h-14 text-gray-600"
-                        : "w-8 h-8 text-white"
+                        ? "w-12 h-12 text-gray-600"
+                        : "w-6 h-6 text-white"
                     }`}
                   />
                 </div>
