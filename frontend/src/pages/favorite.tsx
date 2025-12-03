@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Music, Film, Gamepad2, BookOpen, Palette, Plus } from "lucide-react";
-import CategoryCard from "../components/CategoryCard";
+// import CategoryCard from "../components/CategoryCard";
 import SearchBar from "../components/searchbar";
 import SearchResults from "../components/SearchResults";
 import FavoriteItem from "../components/FavoriteItem";
 import ManualAddForm from "../components/ManualAddForms";
-
+import VerticalCategoryCarousel from "../components/carousel";
 const categories = [
   { type: "MUSIC", icon: Music, label: "Music", color: "bg-purple-400" },
   { type: "MOVIE", icon: Film, label: "Movies", color: "bg-rose-400" },
@@ -185,8 +185,8 @@ export default function Favorites() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen min-w-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+      <div className="  px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* Category Selection - Nintendo DS Style */}
           <div
@@ -198,30 +198,21 @@ export default function Favorites() {
               Favorites
             </h1>
 
-            <div
-              className={`grid gap-4 ${
-                selectedCategory
-                  ? "grid-cols-1"
-                  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-              }`}
-            >
-              {categories.map((category) => (
-                <CategoryCard
-                  key={category.type}
-                  icon={category.icon}
-                  label={category.label}
-                  count={getCategoryCount(category.type)}
-                  color={category.color}
-                  isSelected={selectedCategory === category.type}
-                  onClick={() => {
-                    setSelectedCategory(
-                      selectedCategory === category.type ? null : category.type,
-                    );
-                    setIsSearching(false);
-                    setSearchResults([]);
-                  }}
-                />
-              ))}
+            <div className="flex gap-8">
+              <VerticalCategoryCarousel
+                categories={categories}
+                onSelect={(type) => {
+                  setSelectedCategory(type);
+                  setIsSearching(false);
+                  setSearchResults([]);
+                }}
+              />
+              {selectedCategory && (
+                <div className="flex-1 space-y-6">
+                  {/* right side: search, add manual, favorites list */}
+                  ...
+                </div>
+              )}
             </div>
           </div>
 
