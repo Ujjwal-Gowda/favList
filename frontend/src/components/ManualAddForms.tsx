@@ -53,7 +53,7 @@ export default function ManualAddForm({ type, onAdd }) {
         "
       >
         <Plus className="inline-block mr-2" />
-        Add Manually
+        Add
       </button>
 
       {/* Modal */}

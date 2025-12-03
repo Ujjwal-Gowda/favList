@@ -8,6 +8,7 @@ interface SearchResult {
   Title?: string;
   image?: string;
   Poster?: string;
+  previewLink?: string;
   artists?: Array<{ name: string }>;
   album?: { name: string; image: string };
   description?: string;
@@ -49,7 +50,10 @@ export default function SearchResults({
       return item.authors?.join(", ") || "";
     }
     if (type === "MOVIE") {
-      return item.Year || item.year || "";
+      return `${item.Year || item.year || ""} ${item.actors ? `• ${item.actors}` : ""}`.trim();
+    }
+    if (type === "ART") {
+      return item.user?.name || "";
     }
     return "";
   };

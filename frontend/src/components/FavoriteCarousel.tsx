@@ -106,15 +106,15 @@ export default function FavoriteCarousel({ favorites, onDelete }) {
                   </div>
                 )}
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(item.id);
-                  }}
-                  className="absolute top-2 right-2 bg-white/80 backdrop-blur px-2 py-1 rounded-full hover:bg-red-200"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                {/* <button */}
+                {/*   onClick={(e) => { */}
+                {/*     e.stopPropagation(); */}
+                {/*     onDelete(item.id); */}
+                {/*   }} */}
+                {/*   className="absolute top-2 right-2 bg-white/80 backdrop-blur px-2 py-1 rounded-full hover:bg-red-200" */}
+                {/* > */}
+                {/*   <X className="w-4 h-4" /> */}
+                {/* </button> */}
               </div>
             </div>
           );

@@ -33,6 +33,7 @@ export const searchBook = async (req: Request, res: Response) => {
       description: book.volumeInfo?.description,
       pageCount: book.volumeInfo?.pageCount,
       thumbnail: book.volumeInfo?.imageLinks?.thumbnail || null,
+      previewLink: book.volumeInfo?.previewLink,
       categories: book.volumeInfo?.categories || [],
     }));
     return res.json({
@@ -99,7 +100,7 @@ export const gameSearch = async (req: Request, res: Response) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "text/plain",
       },
-      body: `fields name,cover.url,first_release_date,platforms.name,rating,summary; search "${query}"; limit 10;`,
+      body: `fields name,cover.image_id,first_release_date,platforms.name,rating,summary; search "${query}"; limit 10;`,
       timeout: 10000,
     });
 
@@ -110,10 +111,14 @@ export const gameSearch = async (req: Request, res: Response) => {
     }
 
     const games = await igdbResponse.json();
+    console.log(games);
     const cleaned = games.map((game: any) => ({
       id: game.id,
       name: game.name,
-      image: game.cover?.url,
+      image: game.cover?.image_id
+        ? `https://images.igdb.com/igdb/image/upload/t_720p/${game.cover.image_id}.jpg`
+        : null,
+
       platform: game.platforms.map((i) => i?.name),
       rating: game.rating,
       summary: game.summary,
@@ -242,6 +247,7 @@ export const songSearch = async (req: Request, res: Response) => {
 
 export const movieSearch = async (req: Request, res: Response) => {
   const movie = req.query.query as string;
+  console.log(movie);
   try {
     if (!movie) {
       return res.status(400).json({ error: "movie name is required" });
@@ -252,16 +258,46 @@ export const movieSearch = async (req: Request, res: Response) => {
         method: "GET",
       },
     );
+
     if (!data.ok) {
       const errorText = await data.text();
       console.error("spotify error:", data.status, errorText);
       return res.status(500).json({ error: "failed to fetch movie" });
     }
     const result = await data.json();
+    console.log(result);
+
+    const description = result?.description;
+    if (!Array.isArray(description)) {
+      throw new Error("Invalid API response: description missing");
+    }
+    console.log(description);
+
+    const cleaned = description.map((movie: any) => ({
+      id: movie["#IMDB_ID"],
+      imdbID: movie["#IMDB_ID"],
+
+      title: movie["#TITLE"] || "",
+      Title: movie["#TITLE"] || "",
+
+      year: movie["#YEAR"],
+      Year: movie["#YEAR"]?.toString() || "",
+
+      image: movie["#IMG_POSTER"] || "",
+      Poster: movie["#IMG_POSTER"] || "",
+
+      actors: movie["#ACTORS"] || "",
+      imdbUrl: movie["#IMDB_URL"] || "",
+      rank: movie["#RANK"] ?? null,
+
+      width: movie.photo_width ?? null,
+      height: movie.photo_height ?? null,
+    }));
+    console.log(cleaned);
     return res.json({
       success: true,
-      data: result,
-      count: result.length,
+      data: cleaned,
+      count: cleaned.length,
     });
   } catch (error) {
     console.error("movie search error:", error);
@@ -292,7 +328,6 @@ export const searchUnsplash = async (req: Request, res: Response) => {
     );
 
     const data = await response.json();
-    console.log(data);
 
     const cleaned = data.results.map((img: any) => ({
       id: img.id,

@@ -97,29 +97,57 @@ export default function Favorites() {
   const handleAddFavorite = async (item: any) => {
     try {
       const title = item.name || item.title || item.Title || "Untitled";
-      const metadata = {
-        id: item.id || item.imdbID,
-        image:
-          item.album?.image ||
-          item.image ||
-          item.thumbnail ||
-          item.url ||
-          item.Poster,
-        artist:
-          item.artists?.map((a: any) => a.name).join(", ") ||
-          item.authors?.join(", ") ||
-          item.Year ||
-          "",
-        year:
-          item.releaseDate ||
-          item.publishedDate ||
-          item.year ||
-          item.Year ||
-          "",
-        url: item.spotifyUrl || item.usplash || item.links?.html || "",
-        description: item.description || item.summary || "",
-        ...item,
-      };
+
+      // Handle different metadata structures based on type
+      let metadata: any = {};
+
+      if (selectedCategory === "MUSIC") {
+        metadata = {
+          id: item.id,
+          image: item.album?.image || item.image,
+          artist: item.artists?.map((a: any) => a.name).join(", ") || "",
+          year: item.album?.releaseDate || item.releaseDate || "",
+          url: item.spotifyUrl || "",
+          description: item.description || "",
+        };
+      } else if (selectedCategory === "MOVIE") {
+        metadata = {
+          id: item.id || item.imdbID,
+          image: item.Poster || item.image,
+          artist: item.actors || "",
+          year: item.Year || item.year || "",
+          url: item.imdbUrl || "",
+          description: item.actors || "",
+        };
+      } else if (selectedCategory === "GAME") {
+        metadata = {
+          id: item.id,
+          image: item.image,
+          platform: item.platform,
+          rating: item.rating,
+          year: "",
+          url: "",
+          description: item.summary || "",
+        };
+      } else if (selectedCategory === "BOOK") {
+        metadata = {
+          id: item.id,
+          image: item.thumbnail,
+          artist: item.authors?.join(", ") || "",
+          year: item.publishedDate || "",
+          url: "",
+          description: item.description || "",
+        };
+      } else if (selectedCategory === "ART") {
+        metadata = {
+          id: item.id,
+          image: item.url || item.thumb,
+          artist: item.user?.name || "",
+          year: "",
+          url: item.usplash || item.download || "",
+          description: item.description || "",
+        };
+      }
 
       const response = await fetch("http://localhost:5000/favorites", {
         method: "POST",
@@ -137,7 +165,6 @@ export default function Favorites() {
       console.error("Failed to add favorite:", error);
     }
   };
-
   const handleDeleteFavorite = async (id: string) => {
     try {
       const response = await fetch(`http://localhost:5000/favorites/${id}`, {
