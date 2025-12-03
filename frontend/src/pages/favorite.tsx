@@ -7,12 +7,12 @@ import FavoriteItem from "../components/FavoriteItem";
 import ManualAddForm from "../components/ManualAddForms";
 
 const categories = [
-  { type: "MUSIC", icon: Music, label: "Music", color: "bg-purple-500" },
-  { type: "MOVIE", icon: Film, label: "Movies", color: "bg-red-500" },
-  { type: "GAME", icon: Gamepad2, label: "Games", color: "bg-blue-500" },
-  { type: "BOOK", icon: BookOpen, label: "Books", color: "bg-green-500" },
-  { type: "ART", icon: Palette, label: "Art", color: "bg-pink-500" },
-  { type: "OTHER", icon: Plus, label: "Other", color: "bg-slate-500" },
+  { type: "MUSIC", icon: Music, label: "Music", color: "bg-purple-400" },
+  { type: "MOVIE", icon: Film, label: "Movies", color: "bg-rose-400" },
+  { type: "GAME", icon: Gamepad2, label: "Games", color: "bg-blue-400" },
+  { type: "BOOK", icon: BookOpen, label: "Books", color: "bg-green-400" },
+  { type: "ART", icon: Palette, label: "Art", color: "bg-pink-400" },
+  { type: "OTHER", icon: Plus, label: "Other", color: "bg-amber-400" },
 ];
 
 export default function Favorites() {
@@ -75,10 +75,20 @@ export default function Favorites() {
       if (endpoint) {
         const response = await fetch(endpoint, { credentials: "include" });
         const data = await response.json();
-        setSearchResults(data.data || []);
+
+        // Handle different response structures
+        let results = [];
+        if (Array.isArray(data.data)) {
+          results = data.data;
+        } else if (Array.isArray(data)) {
+          results = data;
+        }
+
+        setSearchResults(results);
       }
     } catch (error) {
       console.error("Search failed:", error);
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }
@@ -86,15 +96,26 @@ export default function Favorites() {
 
   const handleAddFavorite = async (item: any) => {
     try {
-      const title = item.name || item.title || "Untitled";
+      const title = item.name || item.title || item.Title || "Untitled";
       const metadata = {
-        id: item.id,
-        image: item.album?.image || item.image || item.thumbnail || item.url,
+        id: item.id || item.imdbID,
+        image:
+          item.album?.image ||
+          item.image ||
+          item.thumbnail ||
+          item.url ||
+          item.Poster,
         artist:
           item.artists?.map((a: any) => a.name).join(", ") ||
           item.authors?.join(", ") ||
+          item.Year ||
           "",
-        year: item.releaseDate || item.publishedDate || item.year || "",
+        year:
+          item.releaseDate ||
+          item.publishedDate ||
+          item.year ||
+          item.Year ||
+          "",
         url: item.spotifyUrl || item.usplash || item.links?.html || "",
         ...item,
       };
@@ -164,100 +185,108 @@ export default function Favorites() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Category Selection - Nintendo DS Style */}
-        <div
-          className={`transition-all duration-500 ${
-            selectedCategory ? "mb-8" : "mb-0"
-          }`}
-        >
-          <h1 className="text-3xl font-bold text-slate-900 mb-6">
-            Your Favorites Collection
-          </h1>
+        <div className="flex gap-8">
+          {/* Category Selection - Nintendo DS Style */}
+          <div
+            className={`transition-all duration-500 ${
+              selectedCategory ? "w-64 flex-shrink-0" : "flex-1"
+            }`}
+          >
+            <h1 className="text-3xl font-bold text-slate-800 mb-6">
+              Favorites
+            </h1>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.type}
-                icon={category.icon}
-                label={category.label}
-                count={getCategoryCount(category.type)}
-                color={category.color}
-                isSelected={selectedCategory === category.type}
-                onClick={() => {
-                  setSelectedCategory(
-                    selectedCategory === category.type ? null : category.type,
-                  );
-                  setIsSearching(false);
-                  setSearchResults([]);
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Expanded Category View */}
-        {selectedCategory && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            {/* Search Bar */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <SearchBar
-                onSearch={handleSearch}
-                placeholder={`Search for ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
-              />
+            <div
+              className={`grid gap-4 ${
+                selectedCategory
+                  ? "grid-cols-1"
+                  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+              }`}
+            >
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.type}
+                  icon={category.icon}
+                  label={category.label}
+                  count={getCategoryCount(category.type)}
+                  color={category.color}
+                  isSelected={selectedCategory === category.type}
+                  onClick={() => {
+                    setSelectedCategory(
+                      selectedCategory === category.type ? null : category.type,
+                    );
+                    setIsSearching(false);
+                    setSearchResults([]);
+                  }}
+                />
+              ))}
             </div>
+          </div>
 
-            {/* Manual Add Form */}
-            <ManualAddForm type={selectedCategory} onAdd={handleManualAdd} />
-
-            {/* Search Results */}
-            {isSearching && (
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold text-slate-900 mb-4">
-                  Search Results
-                </h2>
-                {loading ? (
-                  <div className="text-center py-12 text-slate-500">
-                    Searching...
-                  </div>
-                ) : (
-                  <SearchResults
-                    results={searchResults}
-                    type={selectedCategory}
-                    onAddFavorite={handleAddFavorite}
-                    favoriteIds={favoriteIds}
-                  />
-                )}
+          {/* Expanded Category View */}
+          {selectedCategory && (
+            <div className="flex-1 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              {/* Search Bar */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100">
+                <SearchBar
+                  onSearch={handleSearch}
+                  placeholder={`Search for ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
+                />
               </div>
-            )}
 
-            {/* Your Favorites in This Category */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">
-                Your{" "}
-                {categories.find((c) => c.type === selectedCategory)?.label}
-              </h2>
-              {getCategoryFavorites().length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  No favorites yet. Search and add some!
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {getCategoryFavorites().map((favorite) => (
-                    <FavoriteItem
-                      key={favorite.id}
-                      id={favorite.id}
-                      title={favorite.title}
-                      metadata={favorite.metadata}
-                      onDelete={handleDeleteFavorite}
+              {/* Manual Add Form */}
+              <ManualAddForm type={selectedCategory} onAdd={handleManualAdd} />
+
+              {/* Search Results */}
+              {isSearching && (
+                <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100">
+                  <h2 className="text-xl font-bold text-slate-800 mb-4">
+                    Search Results
+                  </h2>
+                  {loading ? (
+                    <div className="text-center py-12 text-slate-500">
+                      Searching...
+                    </div>
+                  ) : (
+                    <SearchResults
+                      results={searchResults}
+                      type={selectedCategory}
+                      onAddFavorite={handleAddFavorite}
+                      favoriteIds={favoriteIds}
                     />
-                  ))}
+                  )}
                 </div>
               )}
+
+              {/* Your Favorites in This Category */}
+              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100">
+                <h2 className="text-xl font-bold text-slate-800 mb-4">
+                  Your{" "}
+                  {categories.find((c) => c.type === selectedCategory)?.label}
+                </h2>
+                {getCategoryFavorites().length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    No favorites yet. Search and add some!
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {getCategoryFavorites().map((favorite) => (
+                      <FavoriteItem
+                        key={favorite.id}
+                        id={favorite.id}
+                        title={favorite.title}
+                        metadata={favorite.metadata}
+                        onDelete={handleDeleteFavorite}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
