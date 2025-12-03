@@ -28,6 +28,7 @@ router.post("/signup", async (req, res) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.json({ user });
@@ -52,6 +53,7 @@ router.post("/signin", async (req, res) => {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.json({ user });

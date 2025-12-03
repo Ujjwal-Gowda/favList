@@ -242,7 +242,6 @@ export const songSearch = async (req: Request, res: Response) => {
 
 export const movieSearch = async (req: Request, res: Response) => {
   const movie = req.query.query as string;
-  console.log(movie);
   try {
     if (!movie) {
       return res.status(400).json({ error: "movie name is required" });

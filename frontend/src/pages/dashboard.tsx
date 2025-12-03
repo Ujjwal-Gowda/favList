@@ -1,21 +1,43 @@
 import { useAtom } from "jotai";
 import { userAtom } from "../store/authStore";
+import SearchBar from "../components/searchbar.tsx";
+export default function SearchPage() {
+  const handleSearch = (query: string) => {
+    console.log("Searching for:", query);
 
-export default function Dashboard() {
-  const [user] = useAtom(userAtom);
+    fetch(`http://localhost:5000/search/book/${query}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
 
+    fetch(`http://localhost:5000/search/music?query=${query}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+
+    fetch(`http://localhost:5000/search/game?query=${query}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+
+    fetch(`http://localhost:5000/search/movie?query=${query}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+
+    fetch(`http://localhost:5000/search/images?query=${query}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+  };
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Welcome back, {user?.name}! 👋
-          </h1>
-          <p className="text-slate-600">
-            This is your dashboard. Start searching for your favorite content!
-          </p>
-        </div>
-      </div>
+    <div className="p-6">
+      <SearchBar onSearch={handleSearch} placeholder="Search books..." />
     </div>
   );
 }
