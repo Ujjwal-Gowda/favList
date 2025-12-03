@@ -1,12 +1,7 @@
 import { useState } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, X } from "lucide-react";
 
-interface ManualAddFormProps {
-  type: string;
-  onAdd: (data: { title: string; metadata: any }) => void;
-}
-
-export default function ManualAddForm({ type, onAdd }: ManualAddFormProps) {
+export default function ManualAddForm({ type, onAdd }) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [metadata, setMetadata] = useState({
@@ -18,158 +13,206 @@ export default function ManualAddForm({ type, onAdd }: ManualAddFormProps) {
   });
   const [imagePreview, setImagePreview] = useState("");
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setMetadata({ ...metadata, image: result });
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      setMetadata({ ...metadata, image: reader.result });
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-
-    const cleanMetadata = Object.fromEntries(
+    const clean = Object.fromEntries(
       Object.entries(metadata).filter(([_, v]) => v !== ""),
     );
-
-    onAdd({ title, metadata: cleanMetadata });
-    setTitle("");
-    setMetadata({ artist: "", year: "", description: "", url: "", image: "" });
-    setImagePreview("");
+    onAdd({ title, metadata: clean });
     setIsOpen(false);
   };
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="w-full bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition shadow-lg"
-      >
-        <Plus size={20} />
-        Add Manually
-      </button>
-    );
-  }
-
-  const getInitials = (name: string) => {
-    return name
+  const initials = (str) =>
+    str
       .split(" ")
-      .map((word) => word[0])
+      .map((w) => w[0]?.toUpperCase())
       .join("")
-      .substring(0, 2)
-      .toUpperCase();
-  };
+      .slice(0, 2);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white/80 backdrop-blur rounded-xl p-6 shadow-lg space-y-4 border border-purple-100"
-    >
-      <h3 className="font-semibold text-slate-800 mb-4">
-        Add {type.toLowerCase()} manually
-      </h3>
+    <>
+      {/* Open Button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="
+          border-4 border-purple-300 text-purple-700 bg-pink-100 
+          px-5 py-2 rounded-xl font-medium shadow-sm 
+          hover:-translate-y-1 hover:shadow-md transition
+        "
+      >
+        <Plus className="inline-block mr-2" />
+        Add Manually
+      </button>
 
-      {/* Image Upload */}
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center border-2 border-dashed border-purple-300">
-          {imagePreview ? (
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="w-full h-full object-cover"
-            />
-          ) : title ? (
-            <div className="text-3xl font-bold text-purple-400">
-              {getInitials(title)}
+      {/* Modal */}
+      {isOpen && (
+        <div
+          className="
+            fixed inset-0 z-40 flex items-start justify-center 
+            bg-black/30
+          "
+          onClick={(e) => e.target === e.currentTarget && setIsOpen(false)}
+        >
+          <form
+            onSubmit={submit}
+            className="
+              mt-16 w-[420px] bg-white border-4  
+              rounded-2xl p-6 relative shadow-xl 
+              animate-popupDrop
+            "
+          >
+            {/* Close */}
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+            >
+              <X size={26} />
+            </button>
+
+            <h2 className="text-2xl font-bold  border-b-2  pb-2 mb-4">
+              Add {type.toLowerCase()}
+            </h2>
+
+            {/* Image */}
+            <div className="flex flex-col items-center mb-4">
+              <div
+                className="
+                  w-28 h-28 rounded-xl border-2 border-orange-300
+                  bg-orange-100 flex items-center justify-center
+                "
+              >
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    className="w-full h-full rounded-lg object-cover"
+                  />
+                ) : title ? (
+                  <span className="text-3xl font-bold text-orange-600">
+                    {initials(title)}
+                  </span>
+                ) : (
+                  <Upload className="text-black-400" size={28} />
+                )}
+              </div>
+
+              <label
+                className="
+                  cursor-pointer px-3 py-1 mt-3 rounded-lg 
+                   border 
+                  text-black-600 text-sm 
+                  hover:bg-black-200 transition
+                "
+              >
+                Upload
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </label>
             </div>
-          ) : (
-            <Upload size={32} className="text-purple-300" />
-          )}
+
+            {/* Fields */}
+            <div className="space-y-3">
+              <input
+                className="w-full p-2 rounded-md border-2 border-gray-400 bg-white"
+                placeholder="Title *"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+
+              <input
+                className="w-full p-2 rounded-md border-2 border-gray-400 bg-white"
+                placeholder={
+                  type === "MUSIC"
+                    ? "Artist"
+                    : type === "MOVIE"
+                      ? "Director"
+                      : type === "BOOK"
+                        ? "Author"
+                        : "Creator"
+                }
+                value={metadata.artist}
+                onChange={(e) =>
+                  setMetadata({ ...metadata, artist: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full p-2 rounded-md border-2 border-gray-400 bg-white"
+                placeholder="Year"
+                value={metadata.year}
+                onChange={(e) =>
+                  setMetadata({ ...metadata, year: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full p-2 rounded-md border-2 border-gray-400 bg-white"
+                placeholder="URL (optional)"
+                value={metadata.url}
+                onChange={(e) =>
+                  setMetadata({ ...metadata, url: e.target.value })
+                }
+              />
+
+              <textarea
+                rows={3}
+                placeholder="Description (optional)"
+                className="w-full p-2 rounded-md border-2 border-gray-400 bg-white"
+                value={metadata.description}
+                onChange={(e) =>
+                  setMetadata({ ...metadata, description: e.target.value })
+                }
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="
+                mt-5 w-full border-4 border-green-400 
+                bg-green-200 text-black 
+                py-2 rounded-xl font-medium 
+                hover:bg-green-300 transition
+              "
+            >
+              Add to Favorites
+            </button>
+          </form>
         </div>
-        <label className="cursor-pointer bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition">
-          Upload Image
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </label>
-      </div>
+      )}
 
-      <input
-        type="text"
-        placeholder="Title *"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none bg-white/50"
-        required
-      />
-
-      <input
-        type="text"
-        placeholder={
-          type === "MUSIC"
-            ? "Artist"
-            : type === "MOVIE"
-              ? "Director"
-              : type === "BOOK"
-                ? "Author"
-                : "Creator"
+      {/* Animation */}
+      <style jsx global>{`
+        @keyframes popupDrop {
+          0% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        value={metadata.artist}
-        onChange={(e) => setMetadata({ ...metadata, artist: e.target.value })}
-        className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none bg-white/50"
-      />
-
-      <input
-        type="text"
-        placeholder="Year"
-        value={metadata.year}
-        onChange={(e) => setMetadata({ ...metadata, year: e.target.value })}
-        className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none bg-white/50"
-      />
-
-      <input
-        type="url"
-        placeholder="URL (optional)"
-        value={metadata.url}
-        onChange={(e) => setMetadata({ ...metadata, url: e.target.value })}
-        className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none bg-white/50"
-      />
-
-      <textarea
-        placeholder="Description (optional)"
-        value={metadata.description}
-        onChange={(e) =>
-          setMetadata({ ...metadata, description: e.target.value })
+        .animate-popupDrop {
+          animation: popupDrop 0.25s ease-out forwards;
         }
-        className="w-full px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none resize-none bg-white/50"
-        rows={3}
-      />
-
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          className="flex-1 bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white py-2 rounded-lg font-medium transition"
-        >
-          Add to Favorites
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsOpen(false)}
-          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-lg font-medium transition"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+      `}</style>
+    </>
   );
 }

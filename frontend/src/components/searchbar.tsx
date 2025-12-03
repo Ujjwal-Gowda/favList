@@ -1,5 +1,5 @@
-import { useState } from "react";
-
+import { useState, useRef } from "react";
+import "../cssfiles/searchBar.scss";
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
@@ -7,32 +7,41 @@ interface SearchBarProps {
 
 export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
   const [value, setValue] = useState("");
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (value.trim().length === 0) return;
+    if (!value.trim()) return;
     onSearch(value.trim());
   };
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-50 flex items-center gap-2 p-2 bg-gray-800 rounded-xl shadow-md"
-    >
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder || "Search…"}
-        className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
-      />
+  const handleReset = () => {
+    setValue("");
+    setOpen(false);
+    inputRef.current?.blur();
+  };
 
-      <button
-        type="submit"
-        className="px-4 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-      >
-        Search
-      </button>
+  return (
+    <form onSubmit={handleSubmit} className="inline-block">
+      <div className="search-box">
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          placeholder={placeholder || " "}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => value === "" && setOpen(false)}
+          className={open || value ? "open" : ""}
+        />
+
+        <button
+          type="reset"
+          onClick={value ? handleReset : undefined}
+          className={open || value ? "reset open" : "reset"}
+        />
+      </div>
     </form>
   );
 }

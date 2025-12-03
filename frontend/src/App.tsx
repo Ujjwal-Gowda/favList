@@ -5,13 +5,13 @@ import SignUp from "./pages/signUp";
 import Favorites from "./pages/favorite";
 import ProtectedRoute from "./components/protectedRoutes";
 import PublicRoute from "./components/publicRoutes";
-import Navbar from "./components/Navbar";
+// import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <Provider>
       <BrowserRouter>
-        <Navbar />
+        {/* <Navbar /> */}
         <Routes>
           <Route element={<PublicRoute />}>
             <Route path="/signin" element={<SignIn />} />

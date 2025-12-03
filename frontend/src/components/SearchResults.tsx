@@ -62,6 +62,7 @@ export default function SearchResults({
       .substring(0, 2)
       .toUpperCase();
   };
+  console.log(results);
 
   if (!results || results.length === 0) {
     return (

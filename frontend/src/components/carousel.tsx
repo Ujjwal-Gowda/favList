@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Category {
   type: string;
@@ -16,11 +16,27 @@ export default function VerticalCategoryCarousel({
   categories,
   onSelect,
 }: CarouselProps) {
+  const ITEM_HEIGHT = 130; // px
   const [index, setIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   const moveUp = () => setIndex((i) => (i > 0 ? i - 1 : categories.length - 1));
   const moveDown = () =>
     setIndex((i) => (i < categories.length - 1 ? i + 1 : 0));
+
+  // Measure actual container height (fixes header/padding affecting 50vh assumption)
+  useEffect(() => {
+    const measure = () => {
+      if (containerRef.current) {
+        setContainerHeight(containerRef.current.getBoundingClientRect().height);
+      }
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -29,24 +45,31 @@ export default function VerticalCategoryCarousel({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
 
+  // notify parent on selection change
   useEffect(() => {
-    onSelect(categories[index].type);
-    // Only depend on index
-  }, [index]);
-  return (
-    <div className="relative h-[500px] flex items-center gap-4">
-      <div className="flex items-center">
-        <div className="w-0 h-0 border-t-[20px] border-b-[20px] border-r-[25px] border-transparent border-r-gray-500 opacity-60"></div>
-      </div>
+    if (categories.length > 0) onSelect(categories[index].type);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, categories]);
 
-      <div className="relative h-full overflow-hidden w-48 flex justify-center">
+  // compute translate using measured container height
+  const translateY = () => {
+    const ch = containerHeight || window.innerHeight; // fallback
+    const centerOffset = ch / 2 - ITEM_HEIGHT / 2;
+    return `translateY(${centerOffset - index * ITEM_HEIGHT}px)`;
+  };
+
+  return (
+    <div
+      className="relative h-full w-full flex justify-center items-center overflow-hidden"
+      ref={containerRef}
+    >
+      <div className="relative h-full w-full overflow-hidden flex justify-center">
         <div
-          className="flex flex-col items-center gap-6 transition-transform duration-500"
-          style={{
-            transform: `translateY(${200 - index * 140}px)`,
-          }}
+          className="flex flex-col items-center transition-transform duration-500 will-change-transform"
+          style={{ transform: translateY() }}
         >
           {categories.map((cat, i) => {
             const isCenter = i === index;
@@ -56,36 +79,24 @@ export default function VerticalCategoryCarousel({
               <div
                 key={cat.type}
                 onClick={() => setIndex(i)}
-                className={`
-                  cursor-pointer flex items-center justify-center
-                  rounded-3xl transition-all duration-300
-                  ${
-                    isCenter
-                      ? "w-32 h-32 scale-110 shadow-2xl opacity-100 border-4 border-transparent bg-white"
-                      : "w-20 h-20 scale-90 opacity-40"
-                  }
-                `}
+                className={`cursor-pointer flex items-center justify-center rounded-3xl transition-all duration-300 ${isCenter ? "w-44 h-44 scale-110 shadow-xl opacity-100 border-4 border-transparent bg-white" : "w-20 h-20 opacity-40"}`}
                 style={
                   isCenter
                     ? {
                         background:
                           "linear-gradient(135deg, rgba(200,150,255,0.5), rgba(255,150,200,0.5))",
                         padding: "4px",
+                        marginBottom: "20px",
+                        marginTop: "20px",
                       }
-                    : {}
+                    : { marginBottom: "20px", marginTop: "20px" }
                 }
               >
                 <div
-                  className={`flex items-center justify-center w-full h-full rounded-2xl ${
-                    isCenter ? "bg-white" : cat.color
-                  }`}
+                  className={`flex items-center justify-center w-full h-full rounded-2xl ${isCenter ? "bg-white" : cat.color}`}
                 >
                   <Icon
-                    className={`${
-                      isCenter
-                        ? "w-12 h-12 text-gray-600"
-                        : "w-6 h-6 text-white"
-                    }`}
+                    className={`${isCenter ? "w-12 h-12 text-gray-600" : "w-6 h-6 text-white"}`}
                   />
                 </div>
               </div>

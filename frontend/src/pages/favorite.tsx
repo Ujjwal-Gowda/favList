@@ -1,13 +1,8 @@
+// Updated Favorites page layout with proper alignment
+// Replace your Favorites.tsx with this version
+
 import { useState, useEffect } from "react";
-import {
-  Music,
-  Film,
-  Gamepad2,
-  BookOpen,
-  Palette,
-  Plus,
-  X,
-} from "lucide-react";
+import { Music, Film, Gamepad2, BookOpen, Palette, Plus } from "lucide-react";
 import SearchBar from "../components/searchbar";
 import SearchResults from "../components/SearchResults";
 import ManualAddForm from "../components/ManualAddForms";
@@ -68,6 +63,7 @@ export default function Favorites() {
           break;
         case "MOVIE":
           endpoint = `http://localhost:5000/search/movie?query=${encodeURIComponent(query)}`;
+
           break;
         case "GAME":
           endpoint = `http://localhost:5000/search/game?query=${encodeURIComponent(query)}`;
@@ -85,11 +81,8 @@ export default function Favorites() {
         const data = await response.json();
 
         let results = [];
-        if (Array.isArray(data.data)) {
-          results = data.data;
-        } else if (Array.isArray(data)) {
-          results = data;
-        }
+        if (Array.isArray(data.data)) results = data.data;
+        else if (Array.isArray(data)) results = data;
 
         setSearchResults(results);
       }
@@ -139,30 +132,7 @@ export default function Favorites() {
         }),
       });
 
-      if (response.ok) {
-        await fetchFavorites();
-      }
-    } catch (error) {
-      console.error("Failed to add favorite:", error);
-    }
-  };
-
-  const handleManualAdd = async (data: { title: string; metadata: any }) => {
-    try {
-      const response = await fetch("http://localhost:5000/favorites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title: data.title,
-          type: selectedCategory,
-          metadata: data.metadata,
-        }),
-      });
-
-      if (response.ok) {
-        await fetchFavorites();
-      }
+      if (response.ok) fetchFavorites();
     } catch (error) {
       console.error("Failed to add favorite:", error);
     }
@@ -175,25 +145,21 @@ export default function Favorites() {
         credentials: "include",
       });
 
-      if (response.ok) {
-        await fetchFavorites();
-      }
+      if (response.ok) fetchFavorites();
     } catch (error) {
       console.error("Failed to delete favorite:", error);
     }
   };
 
-  const getCategoryFavorites = () => {
-    if (!selectedCategory) return [];
-    return favorites.filter((f) => f.type === selectedCategory);
-  };
+  const getCategoryFavorites = () =>
+    favorites.filter((f) => f.type === selectedCategory);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-hidden">
-      <div className="flex-1 flex">
-        {/* Left Sidebar - Category Carousel */}
-        <div className="w-80 flex-shrink-0 p-6">
-          <h1 className="text-3xl font-bold text-slate-800 mb-6">Favorites</h1>
+    <div className="h-screen w-screen flex bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-hidden">
+      {/* Left Sidebar */}
+      <div className="w-72 h-full p-6 flex flex-col border-r border-white/30">
+        <h1 className="text-3xl font-bold text-slate-800 mb-8">Favorites</h1>
+        <div className="flex-1 flex justify-center">
           <VerticalCategoryCarousel
             categories={categories}
             onSelect={(type: string) => {
@@ -203,59 +169,60 @@ export default function Favorites() {
             }}
           />
         </div>
+      </div>
 
-        {/* Right Content Area */}
-        <div className="flex-1 flex flex-col p-6 space-y-4 overflow-hidden">
-          {/* Search Bar */}
-          <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-lg border border-purple-100">
+      {/* Right Content */}
+      <div className="flex-1 flex flex-col p-10 space-y-8 overflow-hidden">
+        <div className="w-full flex items-center gap-6">
+          <ManualAddForm type={selectedCategory} onAdd={handleAddFavorite} />
+          <div className="w-20 h-20">
             <SearchBar
               onSearch={handleSearch}
               placeholder={`Search for ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
             />
           </div>
+        </div>
 
-          {/* Manual Add Button */}
-          <ManualAddForm type={selectedCategory} onAdd={handleManualAdd} />
-
-          {/* Search Results or Favorites */}
-          <div className="flex-1 overflow-auto">
-            {isSearching ? (
-              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 h-full overflow-auto">
-                <h2 className="text-xl font-bold text-slate-800 mb-4">
-                  Search Results
-                </h2>
-                {loading ? (
-                  <div className="text-center py-12 text-slate-500">
-                    Searching...
-                  </div>
-                ) : (
-                  <SearchResults
-                    results={searchResults}
-                    type={selectedCategory}
-                    onAddFavorite={handleAddFavorite}
-                    favoriteIds={favoriteIds}
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg border border-purple-100 h-full flex flex-col">
-                <h2 className="text-xl font-bold text-slate-800 mb-4">
-                  Your{" "}
-                  {categories.find((c) => c.type === selectedCategory)?.label}
-                </h2>
-                {getCategoryFavorites().length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-slate-500">
-                    No favorites yet. Search and add some!
-                  </div>
-                ) : (
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden rounded-2xl p-6 bg-white/40 backdrop-blur-md">
+          {isSearching ? (
+            <div className="h-full overflow-auto">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">
+                Search Results
+              </h2>
+              {loading ? (
+                <div className="text-center py-12 text-slate-500">
+                  Searching...
+                </div>
+              ) : (
+                <SearchResults
+                  results={searchResults}
+                  type={selectedCategory}
+                  onAddFavorite={handleAddFavorite}
+                  favoriteIds={favoriteIds}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="h-full flex flex-col">
+              <h2 className="text-xl font-bold text-slate-800 mb-6">
+                Your{" "}
+                {categories.find((c) => c.type === selectedCategory)?.label}
+              </h2>
+              {getCategoryFavorites().length === 0 ? (
+                <div className="flex-1 flex items-center justify-center text-slate-500 text-lg">
+                  No favorites yet. Search and add some!
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
                   <FavoriteCarousel
                     favorites={getCategoryFavorites()}
                     onDelete={handleDeleteFavorite}
                   />
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
