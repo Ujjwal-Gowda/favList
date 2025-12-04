@@ -23,7 +23,7 @@ export default function FavoriteCarousel({ favorites, onDelete, onItemClick }) {
     setActiveIndex(0);
   }, [favorites]);
 
-  // ---- HammerJS Swipe Support ----
+  // ---- HammerJS swipe ----
   useEffect(() => {
     const hammer = new Hammer(swipeRef.current);
     hammer.on("swipeleft", goNext);
@@ -31,41 +31,40 @@ export default function FavoriteCarousel({ favorites, onDelete, onItemClick }) {
     return () => hammer.destroy();
   }, [activeIndex]);
 
-  // ---- Keyboard Support (Arrow Keys) ----
+  // ---- Arrow key navigation ----
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
     };
-
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [activeIndex, count]);
 
-  // ---- Slot Positioning (same logic, but NO FADING) ----
+  // ---- SLOT positioning (same behavior, redesigned visually) ----
   const getSlotClass = (index: number) => {
     const diff = index - activeIndex;
     if (diff === 0) return "act";
     if (diff === -1) return "prev";
     if (diff === 1) return "next";
-    if (diff === -2) return "hide";
-    if (diff === 2) return "new-next";
+    if (diff === -2) return "hide-left";
+    if (diff === 2) return "hide-right";
     return "offscreen";
   };
 
   return (
-    <div className="relative w-full flex items-center justify-center">
+    <div className="relative w-full flex items-center justify-center overflow-hidden">
       {/* LEFT ARROW */}
       {activeIndex > 0 && (
         <button
           onClick={goPrev}
-          className="absolute left-10 z-30 w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
+          className="absolute left-4 z-30 w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center hover:scale-110 transition"
         >
           <ChevronLeft className="text-neutral-700" />
         </button>
       )}
 
-      {/* LIST */}
+      {/* CAROUSEL LIST */}
       <ul className="relative h-[320px] w-full flex items-center justify-center pointer-events-auto">
         {favorites.map((item, index) => {
           const slot = getSlotClass(index);
@@ -79,13 +78,17 @@ export default function FavoriteCarousel({ favorites, onDelete, onItemClick }) {
                 else if (slot === "next") goNext();
                 else if (slot === "act") onItemClick(item);
               }}
-              className={`absolute card-${slot} transition-transform duration-700 ease-out rounded-xl overflow-hidden shadow-xl cursor-pointer`}
+              className={`
+                absolute 
+                transition-all duration-700 ease-out rounded-xl overflow-hidden 
+                cursor-pointer card-${slot}
+              `}
               style={{
                 width: CARD_WIDTH,
                 height: CARD_HEIGHT,
-                opacity: 1, // ← remove fading
               }}
             >
+              {/* IMAGE */}
               {item.metadata?.image ? (
                 <img
                   src={item.metadata.image}
@@ -98,6 +101,7 @@ export default function FavoriteCarousel({ favorites, onDelete, onItemClick }) {
                 </div>
               )}
 
+              {/* TITLE Overlay */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
                 <h3 className="text-white text-lg font-semibold truncate">
                   {item.title}
@@ -112,7 +116,7 @@ export default function FavoriteCarousel({ favorites, onDelete, onItemClick }) {
       {activeIndex < count - 1 && (
         <button
           onClick={goNext}
-          className="absolute right-10 z-30 w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
+          className="absolute right-4 z-30 w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center hover:scale-110 transition"
         >
           <ChevronRight className="text-neutral-700" />
         </button>

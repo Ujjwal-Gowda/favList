@@ -2,6 +2,7 @@ import z from "zod";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
 import { platform } from "os";
+import { title } from "process";
 dotenv.config();
 const bookschema = z.object({
   name: z.string().min(1, "Title is required"),
@@ -328,14 +329,15 @@ export const searchUnsplash = async (req: Request, res: Response) => {
     );
 
     const data = await response.json();
-
+    console.log(data);
     const cleaned = data.results.map((img: any) => ({
       id: img.id,
+      title: img.description,
       description: img.description || img.alt_description,
       url: img.urls?.regular,
       thumb: img.urls?.thumb,
-      download: img.links?.download,
-      usplash: img.links?.html,
+      download: img.urls?.full || img.urls?.raw,
+      unsplash: img.links?.html,
       user: {
         name: img.user?.name,
         profile: img.user?.links?.html,
@@ -368,11 +370,14 @@ export const recommendedUnsplash = async (req: Request, res: Response) => {
 
     const cleaned = data.map((img: any) => ({
       id: img.id,
+
+      title: img.description,
       description: img.description || img.alt_description,
       url: img.urls?.regular,
       thumb: img.urls?.thumb,
-      download: img.links?.download,
-      usplash: img.links?.html,
+
+      download: img.urls?.full || img.urls?.raw,
+      unsplash: img.links?.html,
       user: {
         name: img.user?.name,
         profile: img.user?.links?.html,

@@ -35,7 +35,9 @@ export default function SearchResults({
   const [addingId, setAddingId] = useState<string | null>(null);
 
   const getItemTitle = (item: SearchResult) => {
-    return item.name || item.title || item.Title || "Untitled";
+    return (
+      item.name || item.title || item.Title || item.description || "Untitled"
+    );
   };
 
   const getItemImage = (item: SearchResult) => {

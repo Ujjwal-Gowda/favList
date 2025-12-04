@@ -120,7 +120,7 @@ export default function ManualAddForm({ type, onAdd }) {
                 <input
                   type="file"
                   className="hidden"
-                  accept="image/*"
+                  accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
                   onChange={handleImageChange}
                 />
               </label>
