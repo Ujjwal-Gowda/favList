@@ -1,12 +1,9 @@
-// Horizontal Favorite Carousel (centered, wrapping, no duplication)
-// If total width < container width → fully center the strip.
-
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 const BIG_SIZE = 220;
 const SMALL_SIZE = 180;
-const SLOT_WIDTH = 240; // spacing between items (slightly larger for comfort)
+const SLOT_WIDTH = 240;
 
 export default function FavoriteCarousel({ favorites, onDelete }) {
   const [active, setActive] = useState(0);
@@ -14,24 +11,19 @@ export default function FavoriteCarousel({ favorites, onDelete }) {
   const containerRef = useRef(null);
 
   const count = favorites.length;
-
-  // Measure container width
+  function getWidth(el) {
+    return el ? el.getBoundingClientRect().width : 0;
+  }
   useEffect(() => {
-    const update = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.getBoundingClientRect().width);
-      }
-    };
+    const update = () => setContainerWidth(getWidth(containerRef.current));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Wrap-around logic
   const goNext = () => setActive((active + 1) % count);
   const goPrev = () => setActive((active - 1 + count) % count);
 
-  // Keyboard navigation
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "ArrowRight") goNext();
@@ -41,16 +33,13 @@ export default function FavoriteCarousel({ favorites, onDelete }) {
     return () => window.removeEventListener("keydown", handler);
   }, [active]);
 
-  // ----- NEW LOGIC: Center the whole strip if few items -----
   const totalStripWidth = count * SLOT_WIDTH;
 
   let translateX = 0;
 
   if (totalStripWidth <= containerWidth) {
-    // Items fit inside container → center whole strip
     translateX = (containerWidth - totalStripWidth) / 2;
   } else {
-    // Items overflow → use active-centering logic
     translateX = containerWidth / 2 - SLOT_WIDTH / 2 - active * SLOT_WIDTH;
   }
 
@@ -59,7 +48,6 @@ export default function FavoriteCarousel({ favorites, onDelete }) {
       ref={containerRef}
       className="relative w-full h-[350px] flex items-center justify-center overflow-hidden"
     >
-      {/* LEFT BUTTON */}
       {count > 1 && (
         <button
           onClick={goPrev}
@@ -69,7 +57,6 @@ export default function FavoriteCarousel({ favorites, onDelete }) {
         </button>
       )}
 
-      {/* ITEM STRIP */}
       <div
         className="flex items-center transition-transform duration-500 ease-out"
         style={{
@@ -80,7 +67,7 @@ export default function FavoriteCarousel({ favorites, onDelete }) {
           const isActive = index === active;
           const size = isActive ? BIG_SIZE : SMALL_SIZE;
           const scale = isActive ? 1.15 : 0.9;
-          const opacity = isActive ? 1 : 0.6;
+          const opacity = isActive ? 1 : 0.8;
 
           return (
             <div

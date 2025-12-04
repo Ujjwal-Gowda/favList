@@ -34,19 +34,12 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <Link
             to="/favorites"
-            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+            className="text-3xl justify-center items-center font-bold text-slate-800  "
           >
             Favorites
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link
-              to="/favorites"
-              className="text-slate-600 hover:text-purple-600 transition flex items-center gap-2"
-            >
-              <Heart size={18} />
-            </Link>
-
             <div className="relative">
               <button
                 onMouseEnter={() => setShowProfile(true)}

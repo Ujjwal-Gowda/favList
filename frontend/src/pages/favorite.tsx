@@ -185,7 +185,6 @@ export default function Favorites() {
     <div className="h-screen w-screen flex bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-hidden">
       {/* Left Sidebar */}
       <div className="w-72 h-full p-6 flex flex-col border-r border-white/30">
-        <h1 className="text-3xl font-bold text-slate-800 mb-8">Favorites</h1>
         <div className="flex-1 flex justify-center">
           <VerticalCategoryCarousel
             categories={categories}
@@ -199,8 +198,8 @@ export default function Favorites() {
       </div>
 
       {/* Right Content */}
-      <div className="flex-1 flex flex-col p-10 space-y-8 overflow-hidden">
-        <div className="w-full flex items-center gap-6">
+      <div className="flex-1 flex flex-col p-6 space-y-2 overflow-hidden">
+        <div className="w-full justify-center  flex items-center gap-6">
           <ManualAddForm type={selectedCategory} onAdd={handleAddFavorite} />
           <div className="w-20 h-20">
             <SearchBar
@@ -232,8 +231,8 @@ export default function Favorites() {
             </div>
           ) : (
             <div className="h-full flex flex-col">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">
-                Your{" "}
+              <h2 className=" flex text-2xl font-bold justify-center items-center text-slate-800 mb-2">
+                {" "}
                 {categories.find((c) => c.type === selectedCategory)?.label}
               </h2>
               {getCategoryFavorites().length === 0 ? (
