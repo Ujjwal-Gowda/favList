@@ -1,122 +1,128 @@
-import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Hammer from "hammerjs";
 
-const BIG_SIZE = 220;
-const SMALL_SIZE = 180;
-const SLOT_WIDTH = 240;
+const CARD_WIDTH = 280;
+const CARD_HEIGHT = 320;
 
-export default function FavoriteCarousel({ favorites, onDelete }) {
-  const [active, setActive] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const containerRef = useRef(null);
+export default function FavoriteCarousel({ favorites, onDelete, onItemClick }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const swipeRef = useRef(null);
 
   const count = favorites.length;
-  function getWidth(el) {
-    return el ? el.getBoundingClientRect().width : 0;
-  }
-  useEffect(() => {
-    const update = () => setContainerWidth(getWidth(containerRef.current));
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
 
-  const goNext = () => setActive((active + 1) % count);
-  const goPrev = () => setActive((active - 1 + count) % count);
+  const goNext = () => {
+    if (activeIndex < count - 1) setActiveIndex(activeIndex + 1);
+  };
+
+  const goPrev = () => {
+    if (activeIndex > 0) setActiveIndex(activeIndex - 1);
+  };
 
   useEffect(() => {
-    const handler = (e) => {
+    setActiveIndex(0);
+  }, [favorites]);
+
+  // ---- HammerJS Swipe Support ----
+  useEffect(() => {
+    const hammer = new Hammer(swipeRef.current);
+    hammer.on("swipeleft", goNext);
+    hammer.on("swiperight", goPrev);
+    return () => hammer.destroy();
+  }, [activeIndex]);
+
+  // ---- Keyboard Support (Arrow Keys) ----
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [active]);
 
-  const totalStripWidth = count * SLOT_WIDTH;
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [activeIndex, count]);
 
-  let translateX = 0;
-
-  if (totalStripWidth <= containerWidth) {
-    translateX = (containerWidth - totalStripWidth) / 2;
-  } else {
-    translateX = containerWidth / 2 - SLOT_WIDTH / 2 - active * SLOT_WIDTH;
-  }
+  // ---- Slot Positioning (same logic, but NO FADING) ----
+  const getSlotClass = (index: number) => {
+    const diff = index - activeIndex;
+    if (diff === 0) return "act";
+    if (diff === -1) return "prev";
+    if (diff === 1) return "next";
+    if (diff === -2) return "hide";
+    if (diff === 2) return "new-next";
+    return "offscreen";
+  };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-[350px] flex items-center justify-center overflow-hidden"
-    >
-      {count > 1 && (
+    <div className="relative w-full flex items-center justify-center">
+      {/* LEFT ARROW */}
+      {activeIndex > 0 && (
         <button
           onClick={goPrev}
-          className="absolute left-6 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow hover:scale-105 transition"
+          className="absolute left-10 z-30 w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
         >
-          <ChevronLeft />
+          <ChevronLeft className="text-neutral-700" />
         </button>
       )}
 
-      <div
-        className="flex items-center transition-transform duration-500 ease-out"
-        style={{
-          transform: `translateX(${translateX}px)`,
-        }}
-      >
+      {/* LIST */}
+      <ul className="relative h-[320px] w-full flex items-center justify-center pointer-events-auto">
         {favorites.map((item, index) => {
-          const isActive = index === active;
-          const size = isActive ? BIG_SIZE : SMALL_SIZE;
-          const scale = isActive ? 1.15 : 0.9;
-          const opacity = isActive ? 1 : 0.8;
+          const slot = getSlotClass(index);
+          if (slot === "offscreen") return null;
 
           return (
-            <div
+            <li
               key={item.id || index}
-              onClick={() => setActive(index)}
-              className="cursor-pointer mx-[40px] transition-all duration-500"
+              onClick={() => {
+                if (slot === "prev") goPrev();
+                else if (slot === "next") goNext();
+                else if (slot === "act") onItemClick(item);
+              }}
+              className={`absolute card-${slot} transition-transform duration-700 ease-out rounded-xl overflow-hidden shadow-xl cursor-pointer`}
               style={{
-                width: size,
-                height: size,
-                transform: `scale(${scale})`,
-                opacity,
+                width: CARD_WIDTH,
+                height: CARD_HEIGHT,
+                opacity: 1, // ← remove fading
               }}
             >
-              <div className="relative w-full h-full rounded-2xl shadow-lg overflow-hidden bg-white">
-                {item.metadata?.image ? (
-                  <img
-                    src={item.metadata.image}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl text-slate-500">
-                    ?
-                  </div>
-                )}
+              {item.metadata?.image ? (
+                <img
+                  src={item.metadata.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-neutral-600 bg-neutral-200">
+                  {item.title?.charAt(0).toUpperCase()}
+                </div>
+              )}
 
-                {/* <button */}
-                {/*   onClick={(e) => { */}
-                {/*     e.stopPropagation(); */}
-                {/*     onDelete(item.id); */}
-                {/*   }} */}
-                {/*   className="absolute top-2 right-2 bg-white/80 backdrop-blur px-2 py-1 rounded-full hover:bg-red-200" */}
-                {/* > */}
-                {/*   <X className="w-4 h-4" /> */}
-                {/* </button> */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                <h3 className="text-white text-lg font-semibold truncate">
+                  {item.title}
+                </h3>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
 
-      {/* RIGHT BUTTON */}
-      {count > 1 && (
+      {/* RIGHT ARROW */}
+      {activeIndex < count - 1 && (
         <button
           onClick={goNext}
-          className="absolute right-6 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow hover:scale-105 transition"
+          className="absolute right-10 z-30 w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-110 transition"
         >
-          <ChevronRight />
+          <ChevronRight className="text-neutral-700" />
         </button>
       )}
+
+      {/* SWIPE OVERLAY */}
+      <div
+        ref={swipeRef}
+        className="absolute w-[280px] h-[320px] opacity-0"
+      ></div>
     </div>
   );
 }

@@ -12,3 +12,28 @@ body,
   overflow: hidden; /* prevents page scrolling while using arrow keys */
   display: flex;
 }
+
+.card-act {
+  transform: translateX(0) scale(1);
+  z-index: 10;
+}
+
+.card-prev {
+  transform: translateX(-300px) scale(0.9);
+  z-index: 5;
+}
+
+.card-next {
+  transform: translateX(300px) scale(0.9);
+  z-index: 5;
+}
+
+.card-hide {
+  transform: translateX(-600px) scale(0.85);
+  opacity: 1; /* no fading */
+}
+
+.card-new-next {
+  transform: translateX(600px) scale(0.85);
+  opacity: 1; /* no fading */
+}

@@ -1,67 +1,92 @@
 import { useAtom, useSetAtom } from "jotai";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User, Heart } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { userAtom, isAuthenticatedAtom } from "../store/authStore";
-import { useState } from "react";
+import { useRef, useEffect, useState } from "react";
 
 export default function Navbar() {
   const [user] = useAtom(userAtom);
   const [isAuthenticated] = useAtom(isAuthenticatedAtom);
   const setUser = useSetAtom(userAtom);
   const navigate = useNavigate();
-  const [showProfile, setShowProfile] = useState(false);
+
+  // Hooks ALWAYS RUN — safe
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = () => {
     setUser(null);
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    fetch("http://localhost:5000/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
     navigate("/signin");
   };
 
-  if (!isAuthenticated) return null;
-
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       ?.split(" ")
-      .map((word) => word[0])
+      .map((w) => w[0])
       .join("")
       .substring(0, 2)
       .toUpperCase();
-  };
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
-    <nav className="bg-white/80 backdrop-blur border-b border-purple-200 sticky top-0 z-50">
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link
-            to="/favorites"
-            className="text-3xl justify-center items-center font-bold text-slate-800  "
-          >
-            Favorites
-          </Link>
+    <nav className="bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
+      {/* If not authenticated -> render empty bar */}
+      {!isAuthenticated ? (
+        <div className="h-16" />
+      ) : (
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link to="/favorites" className="text-2xl font-semibold   ">
+              Favorites
+            </Link>
 
-          <div className="flex items-center gap-4">
-            <div className="relative">
+            {/* Profile */}
+            <div className="relative" ref={dropdownRef}>
               <button
-                onMouseEnter={() => setShowProfile(true)}
-                onMouseLeave={() => setShowProfile(false)}
-                className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                onClick={() => setOpen((p) => !p)}
+                className="flex items-center px-2 py-1 rounded-full 
+                hover:bg-lime-100/50 transition"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold text-sm">
+                <div
+                  className="w-10 h-10 rounded-full bg-black-200
+                    border border-black p-4
+                  flex items-center justify-center
+                  text-slate-800 font-semibold shadow"
+                >
                   {getInitials(user?.name || "")}
                 </div>
               </button>
 
-              {showProfile && (
+              {/* Dropdown */}
+              {open && (
                 <div
-                  onMouseEnter={() => setShowProfile(true)}
-                  onMouseLeave={() => setShowProfile(false)}
-                  className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-purple-200 p-4 animate-in fade-in slide-in-from-top-2 duration-200"
+                  className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-lg 
+                  border border-black  p-6"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-12 h-12 rounded-full border border-amber-400 p-6 flex items-center justify-center text-slate-800 font-bold text-lg shadow">
                       {getInitials(user?.name || "")}
                     </div>
-                    <div className="flex-1 min-w-0">
+
+                    <div className="min-w-0">
                       <p className="font-semibold text-slate-800 truncate">
                         {user?.name}
                       </p>
@@ -70,19 +95,20 @@ export default function Navbar() {
                       </p>
                     </div>
                   </div>
+
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                    className="w-full flex items-center justify-center gap-2 py-2 text-sm 
+                    text-red-600 hover:bg-red-50 rounded-lg transition font-medium"
                   >
-                    <LogOut size={16} />
-                    Logout
+                    <LogOut size={16} /> Logout
                   </button>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 }

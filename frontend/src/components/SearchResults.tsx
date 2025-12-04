@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { useState } from "react";
 
 interface SearchResult {
   id?: string;
@@ -20,6 +21,7 @@ interface SearchResultsProps {
   results: SearchResult[];
   type: string;
   onAddFavorite: (item: SearchResult) => void;
+  onItemClick: (item: SearchResult) => void;
   favoriteIds: Set<string>;
 }
 
@@ -27,8 +29,11 @@ export default function SearchResults({
   results,
   type,
   onAddFavorite,
+  onItemClick,
   favoriteIds,
 }: SearchResultsProps) {
+  const [addingId, setAddingId] = useState<string | null>(null);
+
   const getItemTitle = (item: SearchResult) => {
     return item.name || item.title || item.Title || "Untitled";
   };
@@ -66,8 +71,19 @@ export default function SearchResults({
       .substring(0, 2)
       .toUpperCase();
   };
-  console.log(results);
 
+  const handleAddFavorite = async (item: SearchResult) => {
+    const itemId = (item.id || item.imdbID)?.toString();
+    if (!itemId) return;
+
+    setAddingId(itemId);
+
+    try {
+      await onAddFavorite(item);
+    } finally {
+      setTimeout(() => setAddingId(null), 500);
+    }
+  };
   if (!results || results.length === 0) {
     return (
       <div className="text-center py-12 text-slate-500">
@@ -77,19 +93,26 @@ export default function SearchResults({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
       {results.map((item, index) => {
         const itemId = (item.id || item.imdbID || index)?.toString();
         const isFavorited = favoriteIds.has(itemId);
+        const isAdding = addingId === itemId;
+
         const imageUrl = getItemImage(item);
         const title = getItemTitle(item);
 
         return (
           <div
             key={itemId}
-            className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-purple-100"
+            className="w-[280px] h-[360px] bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-neutral-200 relative group cursor-pointer"
           >
-            <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 relative flex items-center justify-center">
+            {/* Image container */}
+            <div
+              className="w-full h-full relative"
+              onClick={() => onItemClick(item)}
+            >
+              {/* Image */}
               {imageUrl && imageUrl !== "N/A" ? (
                 <img
                   src={imageUrl}
@@ -99,37 +122,45 @@ export default function SearchResults({
                     e.currentTarget.style.display = "none";
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
-                      parent.innerHTML = `<div class="text-4xl font-bold text-purple-400">${getInitials(title)}</div>`;
+                      parent.innerHTML = `<div class='w-full h-full flex items-center justify-center text-4xl font-bold text-neutral-700 bg-neutral-200'>${getInitials(
+                        title,
+                      )}</div>`;
                     }
                   }}
                 />
               ) : (
-                <div className="text-4xl font-bold text-purple-400">
+                <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-neutral-700 bg-neutral-200">
                   {getInitials(title)}
                 </div>
               )}
-            </div>
-            <div className="p-3">
-              <h3 className="font-semibold text-sm text-slate-800 truncate">
-                {title}
-              </h3>
-              {getItemSubtitle(item) && (
-                <p className="text-xs text-slate-600 truncate mt-1">
-                  {getItemSubtitle(item)}
-                </p>
-              )}
+
+              {/* Favorite button (top-right) */}
               <button
-                onClick={() => onAddFavorite(item)}
-                disabled={isFavorited}
-                className={`mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddFavorite(item);
+                }}
+                disabled={isFavorited || isAdding}
+                className={`absolute top-3 right-3 p-2 rounded-full shadow-md transition-all ${
                   isFavorited
-                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                    : "bg-rose-100 text-rose-600 hover:bg-rose-200"
+                    ? "bg-neutral-200 text-neutral-500 cursor-not-allowed"
+                    : isAdding
+                      ? "bg-green-600 text-white animate-pulse"
+                      : "bg-black/70 text-white hover:scale-110 active:scale-95"
                 }`}
               >
-                <Heart size={16} fill={isFavorited ? "currentColor" : "none"} />
-                {isFavorited ? "Added" : "Add"}
+                <Heart
+                  size={18}
+                  fill={isFavorited || isAdding ? "currentColor" : "none"}
+                />
               </button>
+
+              {/* Bottom-left title overlay */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                <h3 className="text-white text-lg font-semibold truncate">
+                  {title}
+                </h3>
+              </div>
             </div>
           </div>
         );

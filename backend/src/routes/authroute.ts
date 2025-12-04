@@ -66,10 +66,16 @@ router.post("/logout", async (req, res) => {
   try {
     res.clearCookie("token", {
       httpOnly: true,
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
       path: "/",
+      expires: new Date(0),
     });
-    res.redirect("/");
-  } catch (error) {}
+    console.log("Logout hit");
+    res.status(200).json({ message: "logged out" });
+    return res.status(200).json({ message: "logged out " });
+  } catch (error) {
+    return res.status(400).json({ error: "failed to log out " });
+  }
 });
 export default router;
