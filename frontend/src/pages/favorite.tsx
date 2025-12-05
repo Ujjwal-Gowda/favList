@@ -241,6 +241,7 @@ export default function Favorites() {
                 <VerticalCategoryCarousel
                   categories={categories}
                   onSelect={handleCategorySelect}
+                  isMobile={true}
                 />
               </div>
             </div>
@@ -435,6 +436,7 @@ export default function Favorites() {
             <VerticalCategoryCarousel
               categories={categories}
               onSelect={handleCategorySelect}
+              isMobile={false}
             />
           </div>
         </div>

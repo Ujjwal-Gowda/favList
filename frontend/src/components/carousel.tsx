@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Music, Film, Gamepad2, BookOpen, Palette, Plus } from "lucide-react";
 
 interface Category {
   type: string;
@@ -14,7 +13,7 @@ interface CarouselProps {
   isMobile?: boolean;
 }
 
-function VerticalCategoryCarousel({
+export default function VerticalCategoryCarousel({
   categories,
   onSelect,
   isMobile = false,
@@ -66,7 +65,7 @@ function VerticalCategoryCarousel({
 
   // Keyboard controls for desktop
   useEffect(() => {
-    if (isMobile) return; // Don't add keyboard controls on mobile
+    if (isMobile) return;
 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp") moveUp();
@@ -74,6 +73,7 @@ function VerticalCategoryCarousel({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories, isMobile, index]);
 
   // Touch events for mobile
@@ -92,6 +92,7 @@ function VerticalCategoryCarousel({
       div.removeEventListener("touchmove", handleTouchMove);
       div.removeEventListener("touchend", handleTouchEnd);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, isMobile]);
 
   // Auto-select on index change for desktop only
@@ -99,6 +100,7 @@ function VerticalCategoryCarousel({
     if (!isMobile && categories.length > 0) {
       onSelect(categories[index].type);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, categories, isMobile]);
 
   // Handle click - different behavior for mobile vs desktop
@@ -199,99 +201,6 @@ function VerticalCategoryCarousel({
           })}
         </div>
       </div>
-    </div>
-  );
-}
-
-// Demo component showing the fix
-export default function Demo() {
-  const [selectedCategory, setSelectedCategory] = useState("MUSIC");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [showCategoryView, setShowCategoryView] = useState(true);
-
-  const categories = [
-    { type: "MUSIC", icon: Music, label: "Music", color: "bg-purple-400" },
-    { type: "MOVIE", icon: Film, label: "Movies", color: "bg-rose-400" },
-    { type: "GAME", icon: Gamepad2, label: "Games", color: "bg-blue-400" },
-    { type: "BOOK", icon: BookOpen, label: "Books", color: "bg-green-400" },
-    { type: "ART", icon: Palette, label: "Art", color: "bg-pink-400" },
-    { type: "OTHER", icon: Plus, label: "Other", color: "bg-amber-400" },
-  ];
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  const handleCategorySelect = (type: string) => {
-    setSelectedCategory(type);
-    if (isMobile) {
-      setShowCategoryView(false);
-    }
-  };
-
-  const handleBack = () => {
-    setShowCategoryView(true);
-  };
-
-  return (
-    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50">
-      {isMobile ? (
-        // Mobile view
-        showCategoryView ? (
-          <div className="flex-1 flex flex-col p-4">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">
-              Choose Category
-            </h2>
-            <div className="flex-1 flex justify-center overflow-hidden">
-              <VerticalCategoryCarousel
-                categories={categories}
-                onSelect={handleCategorySelect}
-                isMobile={true}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col p-4">
-            <button
-              onClick={handleBack}
-              className="mb-4 px-4 py-2 bg-white rounded-lg shadow-md hover:shadow-lg transition"
-            >
-              ← Back
-            </button>
-            <div className="flex-1 bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-lg">
-              <h2 className="text-2xl font-bold text-slate-800 mb-4">
-                {categories.find((c) => c.type === selectedCategory)?.label}
-              </h2>
-              <p className="text-slate-600">
-                Selected category: {selectedCategory}
-              </p>
-            </div>
-          </div>
-        )
-      ) : (
-        // Desktop view
-        <div className="flex-1 flex">
-          <div className="w-72 h-full p-6 border-r border-white/30">
-            <VerticalCategoryCarousel
-              categories={categories}
-              onSelect={handleCategorySelect}
-              isMobile={false}
-            />
-          </div>
-          <div className="flex-1 p-6">
-            <div className="h-full bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-lg">
-              <h2 className="text-2xl font-bold text-slate-800 mb-4">
-                {categories.find((c) => c.type === selectedCategory)?.label}
-              </h2>
-              <p className="text-slate-600">
-                Selected category: {selectedCategory}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
