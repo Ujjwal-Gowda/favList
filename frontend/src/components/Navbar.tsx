@@ -16,7 +16,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     setUser(null);
-    fetch("http://localhost:5000/auth/logout", {
+    fetch("https://favlist.onrender.com/auth/logout", {
       method: "POST",
       credentials: "include",
     });

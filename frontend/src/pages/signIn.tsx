@@ -18,7 +18,7 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/auth/signin", {
+      const response = await fetch("https://favlist.onrender.com/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

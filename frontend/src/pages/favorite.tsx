@@ -52,7 +52,7 @@ export default function Favorites() {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch("http://localhost:5000/favorites", {
+      const response = await fetch("https://favlist.onrender.com/favorites", {
         credentials: "include",
       });
       const data = await response.json();
@@ -81,19 +81,19 @@ export default function Favorites() {
       let endpoint = "";
       switch (selectedCategory) {
         case "MUSIC":
-          endpoint = `http://localhost:5000/search/music?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/search/music?query=${encodeURIComponent(query)}`;
           break;
         case "MOVIE":
-          endpoint = `http://localhost:5000/search/movie?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/movie?query=${encodeURIComponent(query)}`;
           break;
         case "GAME":
-          endpoint = `http://localhost:5000/search/game?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/game?query=${encodeURIComponent(query)}`;
           break;
         case "BOOK":
-          endpoint = `http://localhost:5000/search/book/${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/book/${encodeURIComponent(query)}`;
           break;
         case "ART":
-          endpoint = `http://localhost:5000/search/images?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/images?query=${encodeURIComponent(query)}`;
           break;
       }
 
@@ -179,7 +179,7 @@ export default function Favorites() {
         }
       }
 
-      const response = await fetch("http://localhost:5000/favorites", {
+      const response = await fetch("https://favlist.onrender.com/favorites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -195,10 +195,13 @@ export default function Favorites() {
   const handleDeleteFavorite = async (id: string) => {
     if (!id) return;
     try {
-      const response = await fetch(`http://localhost:5000/favorites/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `https://favlist.onrender.com/favorites/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       if (response.ok) fetchFavorites();
     } catch (error) {
       console.error("Failed to delete favorite:", error);
