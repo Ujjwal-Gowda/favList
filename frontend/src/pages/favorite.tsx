@@ -84,16 +84,16 @@ export default function Favorites() {
           endpoint = `https://favlist.onrender.com/search/music?query=${encodeURIComponent(query)}`;
           break;
         case "MOVIE":
-          endpoint = `https://favlist.onrender.com/movie?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/search/movie?query=${encodeURIComponent(query)}`;
           break;
         case "GAME":
-          endpoint = `https://favlist.onrender.com/game?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/search/game?query=${encodeURIComponent(query)}`;
           break;
         case "BOOK":
-          endpoint = `https://favlist.onrender.com/book/${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/search/book/${encodeURIComponent(query)}`;
           break;
         case "ART":
-          endpoint = `https://favlist.onrender.com/images?query=${encodeURIComponent(query)}`;
+          endpoint = `https://favlist.onrender.com/search/images?query=${encodeURIComponent(query)}`;
           break;
       }
 
