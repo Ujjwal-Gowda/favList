@@ -58,10 +58,12 @@ export default function Favorites() {
       const data = await response.json();
       setFavorites(data.favorites || []);
 
-      const ids = new Set(
-        data.favorites?.map((f: any) => f.metadata?.id?.toString() || f.id) ||
-          [],
+      const ids = new Set<string>(
+        (data.favorites || []).map(
+          (f: any) => f.metadata?.id?.toString() || f.id?.toString(),
+        ),
       );
+
       setFavoriteIds(ids);
     } catch (error) {
       console.error("Failed to fetch favorites:", error);
@@ -536,7 +538,7 @@ export default function Favorites() {
         isFavorite={modalIsFavorite}
       />
 
-      <style jsx global>{`
+      <style>{`
         @keyframes spin-slow-reverse {
           from {
             transform: rotate(360deg);

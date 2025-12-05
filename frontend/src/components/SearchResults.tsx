@@ -46,24 +46,24 @@ export default function SearchResults({
     return item.image || item.thumbnail || item.url;
   };
 
-  const getItemSubtitle = (item: SearchResult) => {
-    if (type === "MUSIC") {
-      return item.artists?.map((a) => a.name).join(", ") || "";
-    }
-    if (type === "GAME") {
-      return item.platform?.join(", ") || "";
-    }
-    if (type === "BOOK") {
-      return item.authors?.join(", ") || "";
-    }
-    if (type === "MOVIE") {
-      return `${item.Year || item.year || ""} ${item.actors ? `• ${item.actors}` : ""}`.trim();
-    }
-    if (type === "ART") {
-      return item.user?.name || "";
-    }
-    return "";
-  };
+  // const getItemSubtitle = (item: SearchResult) => {
+  //   if (type === "MUSIC") {
+  //     return item.artists?.map((a) => a.name).join(", ") || "";
+  //   }
+  //   if (type === "GAME") {
+  //     return item.platform?.join(", ") || "";
+  //   }
+  //   if (type === "BOOK") {
+  //     return item.authors?.join(", ") || "";
+  //   }
+  //   if (type === "MOVIE") {
+  //     return `${item.Year || item.year || ""} ${item.actors ? `• ${item.actors}` : ""}`.trim();
+  //   }
+  //   if (type === "ART") {
+  //     return item.user?.name || "";
+  //   }
+  //   return "";
+  // };
 
   const getInitials = (title: string) => {
     return title

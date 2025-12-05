@@ -1,6 +1,14 @@
 import { X, ExternalLink, Trash2, Download, Play } from "lucide-react";
 import { useState } from "react";
+interface ItemDetailsModalProps {
+  item: any;
+  type: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onDelete?: (id?: string) => void;
 
+  isFavorite?: boolean;
+}
 export default function ItemDetailsModal({
   item,
   type,
@@ -8,7 +16,7 @@ export default function ItemDetailsModal({
   onClose,
   onDelete,
   isFavorite = false,
-}) {
+}: ItemDetailsModalProps) {
   const handleDownload = () => {
     console.log("down");
     const url =
@@ -181,7 +189,6 @@ export default function ItemDetailsModal({
             {downloadUrl && (
               <a
                 onClick={handleDownload}
-                href={download}
                 download
                 className="flex items-center gap-1 bg-green-200 px-3 py-1.5 rounded-full text-slate-700 text-sm font-medium hover:bg-green-300 transition"
               >
