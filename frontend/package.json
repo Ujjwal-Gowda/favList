@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.13.2",
+    "gsap": "^3.13.0",
     "hammerjs": "^2.0.8",
     "jotai": "^2.15.1",
     "lucide-react": "^0.555.0",

@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Music, Film, Gamepad2, BookOpen, Palette, Plus } from "lucide-react";
+import {
+  Music,
+  Film,
+  Gamepad2,
+  BookOpen,
+  Palette,
+  Plus,
+  ArrowLeft,
+} from "lucide-react";
 import SearchBar from "../components/searchbar";
 import SearchResults from "../components/SearchResults";
 import ManualAddForm from "../components/ManualAddForms";
@@ -17,7 +25,7 @@ const categories = [
 ];
 
 export default function Favorites() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("ART");
+  const [selectedCategory, setSelectedCategory] = useState<string>("MUSIC");
   const [favorites, setFavorites] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
@@ -27,9 +35,20 @@ export default function Favorites() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalIsFavorite, setModalIsFavorite] = useState(false);
 
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(false);
+  const [showCategoryView, setShowCategoryView] = useState(true);
+
   useEffect(() => {
     fetchFavorites();
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  const checkMobile = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
 
   const fetchFavorites = async () => {
     try {
@@ -97,14 +116,12 @@ export default function Favorites() {
   const handleAddFavorite = async (item: any) => {
     try {
       const isManual = !!item.metadata;
-
       const title =
         item.name ||
         item.title ||
         item.Title ||
         item.metadata?.title ||
         "Untitled";
-
       let metadata: any = {};
 
       if (isManual) {
@@ -114,7 +131,7 @@ export default function Favorites() {
           metadata = {
             id: item.id,
             image: item.album?.image || item.image,
-            artist: item.artists?.map((a) => a.name).join(", ") || "",
+            artist: item.artists?.map((a: any) => a.name).join(", ") || "",
             year: item.album?.releaseDate || item.releaseDate || "",
             url: item.spotifyUrl || "",
             description: item.description || "",
@@ -164,11 +181,7 @@ export default function Favorites() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          title,
-          type: selectedCategory,
-          metadata,
-        }),
+        body: JSON.stringify({ title, type: selectedCategory, metadata }),
       });
 
       if (response.ok) fetchFavorites();
@@ -176,13 +189,13 @@ export default function Favorites() {
       console.error("Failed to add favorite:", error);
     }
   };
+
   const handleDeleteFavorite = async (id: string) => {
     try {
       const response = await fetch(`http://localhost:5000/favorites/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
-
       if (response.ok) fetchFavorites();
     } catch (error) {
       console.error("Failed to delete favorite:", error);
@@ -195,56 +208,173 @@ export default function Favorites() {
     setIsModalOpen(true);
   };
 
+  const handleCategorySelect = (type: string) => {
+    setSelectedCategory(type);
+    if (isMobile) {
+      setShowCategoryView(false);
+    }
+    setIsSearching(false);
+    setSearchResults([]);
+  };
+
   const getCategoryFavorites = () =>
     favorites.filter((f) => f.type === selectedCategory);
 
-  console.log("CATEGORIES SENT TO CAROUSEL:", favorites);
-  return (
-    <>
-      <div className="h-screen w-screen flex bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50 overflow-hidden">
-        {/* Left Sidebar */}
-        <div className="w-72 h-full p-6 flex flex-col border-r border-white/30">
-          <div className="flex-1 flex justify-center">
-            <VerticalCategoryCarousel
-              categories={categories}
-              onSelect={(type: string) => {
-                setSelectedCategory(type);
-                setIsSearching(false);
-                setSearchResults([]);
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Right Content */}
-        <div className="flex-1 flex flex-col p-6 space-y-4 overflow-hidden">
-          {/* Top Bar with Search and Add */}
-          <div className="flex items-center justify-between gap-4 px-4">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-slate-800">
-                {categories.find((c) => c.type === selectedCategory)?.label}
+  // MOBILE LAYOUT
+  if (isMobile) {
+    return (
+      <>
+        <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50 overflow-hidden">
+          {showCategoryView ? (
+            // Category Selection View
+            <div className="flex-1 flex flex-col p-4">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">
+                Choose Category
               </h2>
+              <div className="flex-1 flex justify-center overflow-hidden">
+                <VerticalCategoryCarousel
+                  categories={categories}
+                  onSelect={handleCategorySelect}
+                />
+              </div>
             </div>
+          ) : (
+            // Favorites View
+            <div className="flex-1 flex flex-col space-y-3 overflow-hidden">
+              {/* Header with Back Button */}
+              <div className="flex items-center justify-between px-4 pt-2">
+                <button
+                  onClick={() => {
+                    setShowCategoryView(true);
+                    setIsSearching(false);
+                    setSearchResults([]);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md text-slate-700 hover:shadow-lg transition active:scale-95"
+                >
+                  <ArrowLeft size={20} />
+                </button>
 
-            <div className="flex items-center gap-10">
-              <ManualAddForm
-                type={selectedCategory}
-                onAdd={handleAddFavorite}
-              />
-              <div className="scale-110">
+                <h2 className="text-xl font-bold text-slate-800">
+                  {categories.find((c) => c.type === selectedCategory)?.label}
+                </h2>
+
+                <ManualAddForm
+                  type={selectedCategory}
+                  onAdd={handleAddFavorite}
+                />
+              </div>
+
+              {/* Search Bar - Full Width */}
+              <div className="px-4">
                 <SearchBar
                   onSearch={handleSearch}
-                  placeholder={`Search ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
+                  placeholder={`Search...`}
                   onClear={() => {
                     setIsSearching(false);
                     setSearchResults([]);
                   }}
                 />
               </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-hidden rounded-2xl mx-4 p-3 bg-white/40 backdrop-blur-md shadow-lg">
+                {isSearching ? (
+                  <div className="h-full overflow-auto">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-3">
+                      Search Results
+                    </h3>
+                    {loading ? (
+                      <div className="text-center py-12 text-slate-500">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        Searching...
+                      </div>
+                    ) : (
+                      <SearchResults
+                        results={searchResults}
+                        type={selectedCategory}
+                        onAddFavorite={handleAddFavorite}
+                        onItemClick={(item) => handleItemClick(item, false)}
+                        favoriteIds={favoriteIds}
+                      />
+                    )}
+                  </div>
+                ) : getCategoryFavorites().length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-slate-500 text-lg">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">📭</div>
+                      <p className="text-xl font-medium mb-2">
+                        No favorites yet
+                      </p>
+                      <p className="text-sm">Search and add some items!</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center pt-40">
+                    <FavoriteCarousel
+                      favorites={getCategoryFavorites()}
+                      onDelete={handleDeleteFavorite}
+                      onItemClick={(item) => handleItemClick(item, true)}
+                      isMobile={isMobile}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <ItemDetailsModal
+          item={selectedItem}
+          type={selectedCategory}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onDelete={modalIsFavorite ? handleDeleteFavorite : undefined}
+          isFavorite={modalIsFavorite}
+        />
+      </>
+    );
+  }
+
+  // DESKTOP LAYOUT (unchanged)
+  return (
+    <>
+      <div className="h-screen w-screen flex bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50 overflow-hidden">
+        <div className="w-72 h-full p-6 flex flex-col border-r border-white/30">
+          <div className="flex-1 flex justify-center">
+            <VerticalCategoryCarousel
+              categories={categories}
+              onSelect={handleCategorySelect}
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col p-6 space-y-4 overflow-hidden">
+          <div className="flex items-center justify-between gap-4 px-4">
+            <h2 className="text-2xl font-bold text-slate-800 min-w-fit">
+              {categories.find((c) => c.type === selectedCategory)?.label}
+            </h2>
+            <div className="flex items-center gap-4 flex-1 justify-end">
+              <ManualAddForm
+                type={selectedCategory}
+                onAdd={handleAddFavorite}
+              />
             </div>
           </div>
 
-          {/* Content Area */}
+          {/* Search Bar - Separate Row */}
+          <div className="px-4 flex justify-end">
+            <div className="w-full max-w-md">
+              <SearchBar
+                onSearch={handleSearch}
+                placeholder={`Search ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
+                onClear={() => {
+                  setIsSearching(false);
+                  setSearchResults([]);
+                }}
+              />
+            </div>
+          </div>
+
           <div className="flex-1 overflow-hidden rounded-2xl p-6 bg-white/40 backdrop-blur-md shadow-lg">
             {isSearching ? (
               <div className="h-full overflow-auto">
@@ -266,36 +396,29 @@ export default function Favorites() {
                   />
                 )}
               </div>
+            ) : getCategoryFavorites().length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-lg">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-xl font-medium mb-2">No favorites yet</p>
+                  <p className="text-sm">
+                    Search and add some items to get started!
+                  </p>
+                </div>
+              </div>
             ) : (
-              <div className="h-full flex flex-col">
-                {getCategoryFavorites().length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-slate-500 text-lg">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">📭</div>
-                      <p className="text-xl font-medium mb-2">
-                        No favorites yet
-                      </p>
-                      <p className="text-sm">
-                        Search and add some items to get started!
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center">
-                    <FavoriteCarousel
-                      favorites={getCategoryFavorites()}
-                      onDelete={handleDeleteFavorite}
-                      onItemClick={(item) => handleItemClick(item, true)}
-                    />
-                  </div>
-                )}
+              <div className="flex-1 flex items-center justify-center">
+                <FavoriteCarousel
+                  favorites={getCategoryFavorites()}
+                  onDelete={handleDeleteFavorite}
+                  onItemClick={(item) => handleItemClick(item, true)}
+                />
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Item Details Modal */}
       <ItemDetailsModal
         item={selectedItem}
         type={selectedCategory}
