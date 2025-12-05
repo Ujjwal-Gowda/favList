@@ -193,6 +193,7 @@ export default function Favorites() {
   };
 
   const handleDeleteFavorite = async (id: string) => {
+    if (!id) return;
     try {
       const response = await fetch(`http://localhost:5000/favorites/${id}`, {
         method: "DELETE",

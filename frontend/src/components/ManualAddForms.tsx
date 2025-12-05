@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Plus, Upload, X } from "lucide-react";
 
-export default function ManualAddForm({ type, onAdd }) {
+interface ManualAddFormProps {
+  type: string;
+  onAdd: (item: { title: string; metadata: Record<string, string> }) => void;
+}
+
+export default function ManualAddForm({ type, onAdd }: ManualAddFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [metadata, setMetadata] = useState({
@@ -13,18 +18,19 @@ export default function ManualAddForm({ type, onAdd }) {
   });
   const [imagePreview, setImagePreview] = useState("");
 
-  const handleImageChange = (e) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImagePreview(reader.result);
-      setMetadata({ ...metadata, image: reader.result });
+      const result = reader.result as string;
+      setImagePreview(result);
+      setMetadata({ ...metadata, image: result });
     };
     reader.readAsDataURL(file);
   };
 
-  const submit = (e) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
     const clean = Object.fromEntries(
@@ -34,7 +40,7 @@ export default function ManualAddForm({ type, onAdd }) {
     setIsOpen(false);
   };
 
-  const initials = (str) =>
+  const initials = (str: string) =>
     str
       .split(" ")
       .map((w) => w[0]?.toUpperCase())
@@ -98,6 +104,7 @@ export default function ManualAddForm({ type, onAdd }) {
                   <img
                     src={imagePreview}
                     className="w-full h-full rounded-lg object-cover"
+                    alt="Preview"
                   />
                 ) : title ? (
                   <span className="text-3xl font-bold text-orange-600">
@@ -198,7 +205,7 @@ export default function ManualAddForm({ type, onAdd }) {
       )}
 
       {/* Animation */}
-      <style jsx global>{`
+      <style>{`
         @keyframes popupDrop {
           0% {
             opacity: 0;

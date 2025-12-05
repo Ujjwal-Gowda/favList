@@ -15,7 +15,6 @@ interface FavoriteCarouselProps {
 
 export default function FavoriteCarousel({
   favorites,
-  onDelete,
   onItemClick,
   isMobile = false,
 }: FavoriteCarouselProps) {

@@ -1,14 +1,15 @@
 import { X, ExternalLink, Trash2, Download, Play } from "lucide-react";
 import { useState } from "react";
+
 interface ItemDetailsModalProps {
   item: any;
   type: string;
   isOpen: boolean;
   onClose: () => void;
-  onDelete?: (id?: string) => void;
-
+  onDelete?: (id: string) => void;
   isFavorite?: boolean;
 }
+
 export default function ItemDetailsModal({
   item,
   type,
@@ -36,7 +37,9 @@ export default function ItemDetailsModal({
     link.click();
     link.remove();
   };
+
   const [expanded, setExpanded] = useState(false);
+
   if (!isOpen || !item) return null;
 
   // Pastel header themes
@@ -166,6 +169,7 @@ export default function ItemDetailsModal({
               <a
                 href={url}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-1 bg-blue-200 px-3 py-1.5 rounded-full text-slate-700 text-sm font-medium hover:bg-blue-300 transition"
               >
                 <Play size={16} />
@@ -178,6 +182,7 @@ export default function ItemDetailsModal({
               <a
                 href={url}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-1 bg-purple-200 px-3 py-1.5 rounded-full text-slate-700 text-sm font-medium hover:bg-purple-300 transition"
               >
                 <ExternalLink size={16} />
@@ -187,14 +192,13 @@ export default function ItemDetailsModal({
 
             {/* DOWNLOAD */}
             {downloadUrl && (
-              <a
+              <button
                 onClick={handleDownload}
-                download
                 className="flex items-center gap-1 bg-green-200 px-3 py-1.5 rounded-full text-slate-700 text-sm font-medium hover:bg-green-300 transition"
               >
                 <Download size={16} />
                 Download
-              </a>
+              </button>
             )}
 
             {/* UNSPLASH */}
@@ -202,6 +206,7 @@ export default function ItemDetailsModal({
               <a
                 href={unsplashUrl}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-1 bg-rose-200 px-3 py-1.5 rounded-full text-slate-700 text-sm font-medium hover:bg-rose-300 transition"
               >
                 <ExternalLink size={16} />
@@ -210,7 +215,7 @@ export default function ItemDetailsModal({
             )}
 
             {/* DELETE (icon only) */}
-            {isFavorite && onDelete && (
+            {isFavorite && onDelete && item.id && (
               <button
                 onClick={() => {
                   onDelete(item.id);
