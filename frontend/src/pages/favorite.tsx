@@ -217,6 +217,12 @@ export default function Favorites() {
     setSearchResults([]);
   };
 
+  const handleBackButton = () => {
+    setShowCategoryView(true);
+    setIsSearching(false);
+    setSearchResults([]);
+  };
+
   const getCategoryFavorites = () =>
     favorites.filter((f) => f.type === selectedCategory);
 
@@ -244,12 +250,9 @@ export default function Favorites() {
               {/* Header with Back Button */}
               <div className="flex items-center justify-between px-4 pt-2">
                 <button
-                  onClick={() => {
-                    setShowCategoryView(true);
-                    setIsSearching(false);
-                    setSearchResults([]);
-                  }}
+                  onClick={handleBackButton}
                   className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md text-slate-700 hover:shadow-lg transition active:scale-95"
+                  type="button"
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -277,25 +280,113 @@ export default function Favorites() {
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-hidden rounded-2xl mx-4 p-3 bg-white/40 backdrop-blur-md shadow-lg">
+              <div className="flex-1 overflow-hidden rounded-2xl mx-4 mb-4 p-3 bg-white/40 backdrop-blur-md shadow-lg">
                 {isSearching ? (
                   <div className="h-full overflow-auto">
                     <h3 className="text-lg font-semibold text-slate-800 mb-3">
                       Search Results
                     </h3>
                     {loading ? (
-                      <div className="text-center py-12 text-slate-500">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        Searching...
+                      <div className="flex items-center justify-center py-20">
+                        <div className="relative w-20 h-20">
+                          {/* Outer spinning ring */}
+                          <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+                          <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
+
+                          {/* Inner pulsing circle */}
+                          <div className="absolute inset-3 bg-blue-100 rounded-full animate-pulse"></div>
+
+                          {/* Center dot */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
-                      <SearchResults
-                        results={searchResults}
-                        type={selectedCategory}
-                        onAddFavorite={handleAddFavorite}
-                        onItemClick={(item) => handleItemClick(item, false)}
-                        favoriteIds={favoriteIds}
-                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        {searchResults.map((item, index) => {
+                          const itemId = (
+                            item.id ||
+                            item.imdbID ||
+                            index
+                          )?.toString();
+                          const isFavorited = favoriteIds.has(itemId);
+
+                          const getItemTitle = (item: any) => {
+                            return (
+                              item.name ||
+                              item.title ||
+                              item.Title ||
+                              item.description ||
+                              "Untitled"
+                            );
+                          };
+
+                          const getItemImage = (item: any) => {
+                            if (selectedCategory === "MUSIC")
+                              return item.album?.image || item.image;
+                            if (selectedCategory === "MOVIE")
+                              return item.Poster || item.image;
+                            return item.image || item.thumbnail || item.url;
+                          };
+
+                          const getInitials = (title: string) => {
+                            return title
+                              .split(" ")
+                              .map((word) => word[0])
+                              .join("")
+                              .substring(0, 2)
+                              .toUpperCase();
+                          };
+
+                          const imageUrl = getItemImage(item);
+                          const title = getItemTitle(item);
+
+                          return (
+                            <div
+                              key={itemId}
+                              className="aspect-[3/4] bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-neutral-200 relative group cursor-pointer"
+                              onClick={() => handleItemClick(item, false)}
+                            >
+                              {imageUrl && imageUrl !== "N/A" ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-neutral-700 bg-neutral-200">
+                                  {getInitials(title)}
+                                </div>
+                              )}
+
+                              {/* Bottom-left title overlay */}
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                                <h3 className="text-white text-sm font-semibold truncate">
+                                  {title}
+                                </h3>
+                              </div>
+
+                              {/* Favorite indicator (top-right) */}
+                              {isFavorited && (
+                                <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                                  <svg
+                                    className="w-4 h-4 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 ) : getCategoryFavorites().length === 0 ? (
@@ -335,7 +426,7 @@ export default function Favorites() {
     );
   }
 
-  // DESKTOP LAYOUT (unchanged)
+  // DESKTOP LAYOUT
   return (
     <>
       <div className="h-screen w-screen flex bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50 overflow-hidden">
@@ -382,9 +473,24 @@ export default function Favorites() {
                   Search Results
                 </h3>
                 {loading ? (
-                  <div className="text-center py-12 text-slate-500">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    Searching...
+                  <div className="flex items-center justify-center py-20">
+                    <div className="relative w-24 h-24">
+                      {/* Outer spinning ring */}
+                      <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+                      <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
+
+                      {/* Middle spinning ring (slower, opposite direction) */}
+                      <div className="absolute inset-2 border-4 border-purple-200 rounded-full"></div>
+                      <div className="absolute inset-2 border-4 border-transparent border-t-purple-600 rounded-full animate-spin-slow-reverse"></div>
+
+                      {/* Inner pulsing circle */}
+                      <div className="absolute inset-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full animate-pulse"></div>
+
+                      {/* Center dot */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-4 h-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full animate-ping"></div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <SearchResults
@@ -427,6 +533,21 @@ export default function Favorites() {
         onDelete={modalIsFavorite ? handleDeleteFavorite : undefined}
         isFavorite={modalIsFavorite}
       />
+
+      <style jsx global>{`
+        @keyframes spin-slow-reverse {
+          from {
+            transform: rotate(360deg);
+          }
+          to {
+            transform: rotate(0deg);
+          }
+        }
+
+        .animate-spin-slow-reverse {
+          animation: spin-slow-reverse 2s linear infinite;
+        }
+      `}</style>
     </>
   );
 }

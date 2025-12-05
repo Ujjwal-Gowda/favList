@@ -21,10 +21,22 @@ export default function FavoriteCarousel({
 }: FavoriteCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevFavoritesLengthRef = useRef(favorites.length);
 
+  // Only reset to 0 if the favorites array length changes OR if activeIndex is out of bounds
   useEffect(() => {
-    setActiveIndex(0);
-  }, [favorites]);
+    const prevLength = prevFavoritesLengthRef.current;
+    const currentLength = favorites.length;
+
+    // Reset only if:
+    // 1. Length changed (items added/removed)
+    // 2. Current index is out of bounds
+    if (prevLength !== currentLength || activeIndex >= currentLength) {
+      setActiveIndex(0);
+    }
+
+    prevFavoritesLengthRef.current = currentLength;
+  }, [favorites.length, activeIndex]);
 
   const handleNext = () => {
     setActiveIndex((prev) => (prev < favorites.length - 1 ? prev + 1 : prev));
@@ -47,7 +59,7 @@ export default function FavoriteCarousel({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [activeIndex, isMobile]);
+  }, [activeIndex, isMobile, favorites.length]);
 
   const getInitials = (title: string) => {
     return title
