@@ -28,8 +28,8 @@ router.post("/signup", async (req, res) => {
         const token = jsonwebtoken_1.default.sign({ id: user.id }, JWT_SECRET, { expiresIn: "7d" });
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
@@ -52,8 +52,8 @@ router.post("/signin", async (req, res) => {
         const token = jsonwebtoken_1.default.sign({ id: user.id }, JWT_SECRET, { expiresIn: "7d" });
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
@@ -71,10 +71,8 @@ router.post("/logout", async (req, res) => {
             secure: true,
             sameSite: "none",
             path: "/",
-            expires: new Date(0),
         });
         console.log("Logout hit");
-        res.status(200).json({ message: "logged out" });
         return res.status(200).json({ message: "logged out " });
     }
     catch (error) {
