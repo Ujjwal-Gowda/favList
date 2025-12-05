@@ -117,12 +117,12 @@ export const gameSearch = async (req: Request, res: Response) => {
       id: game.id,
       name: game.name,
       image: game.cover?.image_id
-        ? `https://images.igdb.com/igdb/image/upload/t_720p/${game.cover.image_id}.jpg`
+        ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
         : null,
-
-      platform: game.platforms.map((i) => i?.name),
-      rating: game.rating,
-      summary: game.summary,
+      platform: game.platforms?.map((p: any) => p.name) || [],
+      rating: game.rating ? Math.round(game.rating) : null,
+      summary: game.summary || "",
+      first_release_date: game.first_release_date || null,
     }));
     return res.json({
       success: true,

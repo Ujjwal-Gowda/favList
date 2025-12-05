@@ -55,6 +55,7 @@ export default function ItemDetailsModal({
     item.thumbnail ||
     item.Poster ||
     item.url ||
+    item.album?.image ||
     null;
 
   const description =

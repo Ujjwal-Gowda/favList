@@ -1,11 +1,17 @@
 import { useState, useRef } from "react";
 import "../cssfiles/searchBar.scss";
+
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
+  onClear?: () => void; // Add this prop
 }
 
-export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
+export default function SearchBar({
+  onSearch,
+  placeholder,
+  onClear,
+}: SearchBarProps) {
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -20,6 +26,7 @@ export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
     setValue("");
     setOpen(false);
     inputRef.current?.blur();
+    onClear?.(); // Call the onClear callback
   };
 
   return (

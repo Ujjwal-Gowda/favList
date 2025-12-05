@@ -235,6 +235,10 @@ export default function Favorites() {
                 <SearchBar
                   onSearch={handleSearch}
                   placeholder={`Search ${categories.find((c) => c.type === selectedCategory)?.label.toLowerCase()}...`}
+                  onClear={() => {
+                    setIsSearching(false);
+                    setSearchResults([]);
+                  }}
                 />
               </div>
             </div>

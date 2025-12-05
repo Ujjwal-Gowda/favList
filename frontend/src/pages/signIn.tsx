@@ -12,8 +12,8 @@ export default function SignIn() {
   const setUser = useSetAtom(userAtom);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault?.();
     setError("");
     setLoading(true);
 
@@ -41,104 +41,84 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-slate-600">
-              Sign in to continue to your account
-            </p>
+    <div className="min-h-screen flex items-center justify-center bg-pastel-blue px-4">
+      <div className="w-full max-w-sm bg-white/80 backdrop-blur-md shadow-lg rounded-2xl p-8 border border-white/50">
+        {/* Header */}
+        <h1 className="text-3xl font-semibold text-slate-700 mb-1 text-center">
+          Sign In
+        </h1>
+        <p className="text-slate-500 text-center mb-8">Welcome back 👋</p>
+
+        {/* ERROR */}
+        {error && (
+          <div className="bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-lg text-sm mb-4">
+            {error}
           </div>
+        )}
 
-          <div className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+        {/* FORM */}
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          {/* Email */}
+          <input
+            type="email"
+            placeholder="Email"
+            required
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+            className="w-full p-3 rounded-xl border border-slate-200 bg-white/90 focus:ring-2 focus:ring-pastel-blue focus:border-transparent outline-none"
+          />
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-700 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-700 mb-2"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition pr-12"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
+          {/* Password */}
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              required
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="w-full p-3 rounded-xl border border-slate-200 bg-white/90 focus:ring-2 focus:ring-pastel-blue focus:border-transparent outline-none pr-12"
+            />
 
             <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
-              {loading ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
-              )}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-slate-600">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-blue-600 hover:text-blue-700 font-medium transition"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
-        </div>
+          {/* Submit button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-blue-100 text-black font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
+
+        {/* Redirect */}
+        <p className="text-center text-sm text-slate-600 mt-6">
+          Don’t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-pastel-blue hover:underline font-medium"
+          >
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );
