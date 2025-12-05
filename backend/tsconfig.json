@@ -9,7 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node", "express"],
+    "types": ["node"],
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],
