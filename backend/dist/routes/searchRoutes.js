@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const authware_1 = require("../middleware/authware");
+const searchController_1 = require("../controller/searchController");
+const router = (0, express_1.Router)();
+router.get("/book/:name", authware_1.auth, searchController_1.searchBook);
+router.get("/game", authware_1.auth, searchController_1.gameSearch);
+router.get("/music", authware_1.auth, searchController_1.songSearch);
+router.get("/movie", authware_1.auth, searchController_1.movieSearch);
+router.get("/images", authware_1.auth, searchController_1.searchUnsplash);
+router.get("/", authware_1.auth, searchController_1.recommendedUnsplash);
+exports.default = router;

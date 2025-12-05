@@ -8,6 +8,8 @@ const addFavoriteSchema = z.object({
   metadata: z.any().optional(),
 });
 
+type FavoriteType = z.infer<typeof addFavoriteSchema>;
+
 export const addFavorite = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -85,7 +87,7 @@ export const checkFavorite = async (req: Request, res: Response) => {
       where: {
         userId,
         title: title as string,
-        type: type as FavoriteType,
+        type: type as FavoriteType["type"],
       },
     });
 

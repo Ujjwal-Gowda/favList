@@ -102,7 +102,6 @@ export const gameSearch = async (req: Request, res: Response) => {
         "Content-Type": "text/plain",
       },
       body: `fields name,cover.image_id,first_release_date,platforms.name,rating,summary; search "${query}"; limit 10;`,
-      timeout: 10000,
     });
 
     if (!igdbResponse.ok) {
